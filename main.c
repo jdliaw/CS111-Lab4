@@ -40,16 +40,31 @@ void addtest(int nthreads, int niter) {
 	long start_time = tp->tv_nsec; // want "high resolution" aka in ns
 
 	// start threads
-	for (unsigned i = 0; i < nthreads; i++) {
+	unsigned i;
+	for (i = 0; i < nthreads; i++) {
 		// TODO: make this pthread call correct
-		int ret = pthread_create(&thread[i], NULL, thread_func, args);
+		int ret = pthread_create(&threads[i], NULL, thread_func, args);
 		if (ret != 0) {
 			// TODO: error handling
 		}
 	}
-	// TODO: use add function to do stuff
 
-	// TODO: wait for threads to complete
+	// add and subtract to counter using add function
+	for (i = 0; i < niter; i++) {
+		add(&counter, 1);
+	}
+	for (i = 0; i < niter; i++) {
+		add(&counter, -1);
+	}
+
+	// wait for threads to complete
+	for (i = 0; i < nthreads; i++) {
+		int ret = pthread_join(&threads[i], retval); // TODO: not sure how this retval arg works
+		if (ret != 0) {
+			// TODO: Error handling
+			// ret will be set to an error value: EDEADLK, EINVAL, or ESRCH
+		}
+	}
 
 	// get ending time for run
 	clock_gettime(clk_id, tp);
@@ -73,7 +88,7 @@ void addtest(int nthreads, int niter) {
 }
 
 int main(int argc, char **argv) {
-	 while (1) {
+	while (1) {
     static struct option long_options[] =
     {
 	    { "threads=", required_argument, 0, 't' },
@@ -92,12 +107,14 @@ int main(int argc, char **argv) {
       {
       /* nthreads */ 
       case 't':
+      	// TOOD: default = 1
       	if (optind < argc) {
 	    	int nthreads = argv[optind];
 	  	}
       	break;
       /* niterations */
       case 'i':
+      	// TOOD: default = 1
       	if (optind < argc) {
 	    	int niter = argv[optind];
 	  	}
