@@ -30,34 +30,46 @@ prints to stdout
 If there were no errors, exit with a status of zero, else a non-zero status */
 
 void addtest(int nthreads, int niter) {
-	// nthreads, niter default = 1
+	// TODO: nthreads, niter default = 1
 	long long counter = 0;
 	pthread_t *threads;
 	clockid_t clk_id;
-	struct timespec *tp;
-	/* time_t tv_sec; // whole secs >= 0
-	long tv_nsec; // nanoseconds */
+	struct timespec *tp;  /* time_t tv_sec; // whole secs >= 0
+							long tv_nsec; // nanoseconds */
 	clock_gettime(clk_id, tp);
-	time_t start_time = tp->tv_sec; // want "high resolution".. does that mean ns??
+	long start_time = tp->tv_nsec; // want "high resolution" aka in ns
+
 	// start threads
 	for (unsigned i = 0; i < nthreads; i++) {
+		// TODO: make this pthread call correct
 		int ret = pthread_create(&thread[i], NULL, thread_func, args);
 		if (ret != 0) {
-			// error handling
+			// TODO: error handling
 		}
 	}
-	// use add function to do stuff
+	// TODO: use add function to do stuff
 
-	// wait for threads to complete
+	// TODO: wait for threads to complete
+
 	// get ending time for run
+	clock_gettime(clk_id, tp);
+	long end_time = tp->tv_nsec;
+	long elapsed_time = end_time - start_time;
+	int noperations = nthread * niter * 2;
+	long average_time = elapsed_time / noperations;
 
+	// error message if counter not zero
 	if (counter != 0) {
-		fprintf(stderr, "some error message");
+		fprintf(stderr, "ERROR: final count = %d\n", counter);
 		return;
 	}
 
 	// print stuff to stdout
-	fprintf(stdout, )
+	fprintf(stdout, "%d threads x %d iterations x (add + subtract) = %d operations\n", nthreads, niter, noperations);
+	fprintf(stdout, "elapsed time: %lu\n", elapsed_time);
+	fprintf(stdou, "per operation: %lu\n", average_time);
+
+	// TODO: exit non-zero status if errors, exit 0 if no errors.
 }
 
 int main(int argc, char **argv) {
