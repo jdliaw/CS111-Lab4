@@ -13,6 +13,16 @@ void add(long long *pointer, long long value) {
     *pointer = sum;
 }
 
+void thread_func(long long iterations) {
+	for (i = 0; i < iterations; i++) {
+		add(&counter, 1);
+	}
+	for (i = 0; i < iterations; i++) {
+		add(&counter, -1);
+	}
+	// TODO: exit to re-join parent thread?
+}
+
 /* addtest:
 takes a parameter for the number of parallel threads (--threads=#, default 1)
 takes a parameter for the number of iterations (--iterations=#, default 1)
@@ -31,30 +41,25 @@ If there were no errors, exit with a status of zero, else a non-zero status */
 
 void addtest(int nthreads, int niter) {
 	// TODO: nthreads, niter default = 1
+	int exit_status = 0;
 	long long counter = 0;
 	pthread_t *threads;
-	clockid_t clk_id;
 	struct timespec *tp;  /* time_t tv_sec; // whole secs >= 0
 							long tv_nsec; // nanoseconds */
-	clock_gettime(clk_id, tp);
+	int ret = clock_gettime(CLOCK_MONOTONIC, tp); // TODO: not sure what clk_id should be.. CLOCK_REALTIME?
+	if (ret != 0) {
+		//TODO: error handling
+	}
 	long start_time = tp->tv_nsec; // want "high resolution" aka in ns
 
 	// start threads
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
-		// TODO: make this pthread call correct
-		int ret = pthread_create(&threads[i], NULL, thread_func, args);
+		int ret = pthread_create(&threads[i], NULL, thread_func, niter);
 		if (ret != 0) {
 			// TODO: error handling
+			exit_status = 1;
 		}
-	}
-
-	// add and subtract to counter using add function
-	for (i = 0; i < niter; i++) {
-		add(&counter, 1);
-	}
-	for (i = 0; i < niter; i++) {
-		add(&counter, -1);
 	}
 
 	// wait for threads to complete
@@ -63,6 +68,7 @@ void addtest(int nthreads, int niter) {
 		if (ret != 0) {
 			// TODO: Error handling
 			// ret will be set to an error value: EDEADLK, EINVAL, or ESRCH
+			exit_status = 1;
 		}
 	}
 
@@ -76,6 +82,7 @@ void addtest(int nthreads, int niter) {
 	// error message if counter not zero
 	if (counter != 0) {
 		fprintf(stderr, "ERROR: final count = %d\n", counter);
+		exit_status = 1;
 		return;
 	}
 
@@ -85,6 +92,7 @@ void addtest(int nthreads, int niter) {
 	fprintf(stdou, "per operation: %lu\n", average_time);
 
 	// TODO: exit non-zero status if errors, exit 0 if no errors.
+	exit(exit_status);
 }
 
 int main(int argc, char **argv) {
