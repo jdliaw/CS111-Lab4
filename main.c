@@ -13,7 +13,7 @@ void add(long long *pointer, long long value) {
     *pointer = sum;
 }
 
-void thread_func(long long iterations) {
+void* thread_func(void* arg) {
 	for (i = 0; i < iterations; i++) {
 		add(&counter, 1);
 	}
@@ -55,7 +55,7 @@ void addtest(int nthreads, int niter) {
 	// start threads
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
-		int ret = pthread_create(&threads[i], NULL, thread_func, niter);
+		int ret = pthread_create(&threads[i], NULL, thread_func, niter); // TODO: need two args for thread func (niter and counter)
 		if (ret != 0) {
 			// TODO: error handling
 			exit_status = 1;
@@ -76,12 +76,12 @@ void addtest(int nthreads, int niter) {
 	clock_gettime(clk_id, tp);
 	long end_time = tp->tv_nsec;
 	long elapsed_time = end_time - start_time;
-	int noperations = nthread * niter * 2;
+	int noperations = nthreads * niter * 2;
 	long average_time = elapsed_time / noperations;
 
 	// error message if counter not zero
 	if (counter != 0) {
-		fprintf(stderr, "ERROR: final count = %d\n", counter);
+		fprintf(stderr, "ERROR: final count = %llu\n", counter);
 		exit_status = 1;
 		return;
 	}
@@ -89,7 +89,7 @@ void addtest(int nthreads, int niter) {
 	// print stuff to stdout
 	fprintf(stdout, "%d threads x %d iterations x (add + subtract) = %d operations\n", nthreads, niter, noperations);
 	fprintf(stdout, "elapsed time: %lu\n", elapsed_time);
-	fprintf(stdou, "per operation: %lu\n", average_time);
+	fprintf(stdout, "per operation: %lu\n", average_time);
 
 	// TODO: exit non-zero status if errors, exit 0 if no errors.
 	exit(exit_status);
