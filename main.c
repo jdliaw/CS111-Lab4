@@ -14,6 +14,7 @@ void add(long long *pointer, long long value) {
 }
 
 void thread_func(long long iterations) {
+	int i;
 	for (i = 0; i < iterations; i++) {
 		add(&counter, 1);
 	}
@@ -44,39 +45,40 @@ void addtest(int nthreads, int niter) {
 	int exit_status = 0;
 	long long counter = 0;
 	pthread_t *threads;
+	clock_t clk = CLOCK_MONOTONIC;
 	struct timespec *tp;  /* time_t tv_sec; // whole secs >= 0
 							long tv_nsec; // nanoseconds */
-	int ret = clock_gettime(CLOCK_MONOTONIC, tp); // TODO: not sure what clk_id should be.. CLOCK_REALTIME?
-	if (ret != 0) {
+	int clock_ret = clock_gettime(clk, tp); // TODO: not sure what clk_id should be.. CLOCK_REALTIME?
+	if (clock_ret != 0) {
 		//TODO: error handling
 	}
 	long start_time = tp->tv_nsec; // want "high resolution" aka in ns
 
+
+	//malloc threads
+	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
+
 	// start threads
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
-		int ret = pthread_create(&threads[i], NULL, thread_func, niter);
-		if (ret != 0) {
+		int thread_ret = pthread_create(&tids[i], NULL, thread_func, niter);
+		if (thread_ret != 0) {				//if (ret)... same thing.
 			// TODO: error handling
 			exit_status = 1;
 		}
 	}
 
-	// wait for threads to complete
+	// wait for threads to complete, join.
 	for (i = 0; i < nthreads; i++) {
-		int ret = pthread_join(&threads[i], retval); // TODO: not sure how this retval arg works
-		if (ret != 0) {
-			// TODO: Error handling
-			// ret will be set to an error value: EDEADLK, EINVAL, or ESRCH
-			exit_status = 1;
-		}
+		pthread_join(tids[i], NULL); // TODO: not sure how this retval arg works
 	}
 
+
 	// get ending time for run
-	clock_gettime(clk_id, tp);
+	clock_gettime(clk, tp);
 	long end_time = tp->tv_nsec;
 	long elapsed_time = end_time - start_time;
-	int noperations = nthread * niter * 2;
+	int noperations = nthreads * niter * 2;
 	long average_time = elapsed_time / noperations;
 
 	// error message if counter not zero
@@ -89,7 +91,7 @@ void addtest(int nthreads, int niter) {
 	// print stuff to stdout
 	fprintf(stdout, "%d threads x %d iterations x (add + subtract) = %d operations\n", nthreads, niter, noperations);
 	fprintf(stdout, "elapsed time: %lu\n", elapsed_time);
-	fprintf(stdou, "per operation: %lu\n", average_time);
+	fprintf(stdout, "per operation: %lu\n", average_time);
 
 	// TODO: exit non-zero status if errors, exit 0 if no errors.
 	exit(exit_status);
@@ -104,7 +106,7 @@ int main(int argc, char **argv) {
 		{ 0, 0, 0, 0 }
     };
     int option_index = 0;
-    c = getopt_long(argc, argv, "", long_options, &option_index);
+    int c = getopt_long(argc, argv, "", long_options, &option_index);
 
     /* Detect the end of options */
     if (c == -1) {
@@ -129,4 +131,6 @@ int main(int argc, char **argv) {
       	break;
       default: 
       	break;
+      }
+  }
 }
