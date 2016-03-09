@@ -70,7 +70,10 @@ void addtest(int nthreads, int niter) {
 
 	// wait for threads to complete, join.
 	for (i = 0; i < nthreads; i++) {
-		pthread_join(tids[i], NULL); // TODO: not sure how this retval arg works
+		int thread_ret = pthread_join(tids[i], NULL); // TODO: not sure how this retval arg works
+		if(thread_ret != 0) {
+			exit_status = 1;
+		}
 	}
 
 
