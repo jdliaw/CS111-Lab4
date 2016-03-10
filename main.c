@@ -113,6 +113,8 @@ void addtest(int nthreads, int niter) {
 }
 
 int main(int argc, char **argv) {
+	int nthreads = 0;
+	int iterations = 0;
 	while (1) {
 	    static struct option long_options[] =
 	    {
@@ -127,9 +129,6 @@ int main(int argc, char **argv) {
 	    if (c == -1) {
 	      break;
 	    }
-
-	    int nthreads = 0;
-	    int iterations = 0;
 
 	    fprintf(stderr, "before switch\n");
 
