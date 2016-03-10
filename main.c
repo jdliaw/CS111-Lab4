@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
 	    {
 		    { "threads", optional_argument, 0, 't' },
 			{ "iter", optional_argument, 0, 'i' },
-			{ "yield", optional_argument, 0, 'y' };
+			{ "yield", optional_argument, 0, 'y' },
 			{ 0, 0, 0, 0 }
 	    };
 	    int option_index = 0;
@@ -161,10 +161,11 @@ int main(int argc, char **argv) {
 	      	case 'y':
 	      		if (optarg) {
 	      			opt_yield = atoi(optarg);
-	      			fprintf(stderr, "yield=%d\n", yield);
+	      			fprintf(stderr, "yield=%d\n", opt_yield);
 	      		}
 	      		else {
 	      			opt_yield = 1;
+	      			fprintf(stderr, "yield=%d\n", opt_yield);
 	      		}
 	      		break;
 	      	default: 
