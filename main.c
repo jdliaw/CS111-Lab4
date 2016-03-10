@@ -48,12 +48,12 @@ void* mcount(void* arg) {
 	for (i = 0; i < iterations; i++) {
 		pthread_mutex_lock(&lock);
 		add(&counter, 1);
-		pthread_mutext_unlock(&lock);
+		pthread_mutex_unlock(&lock);
 	}
 	for (i = 0; i < iterations; i++) {
 		pthread_mutex_lock(&lock);
 		add(&counter, -1);
-		pthread_mutext_unlock(&lock);
+		pthread_mutex_unlock(&lock);
 	}
 }
 
@@ -72,11 +72,18 @@ void* scount(void*arg) {
     add(&counter, -1);
     __sync_lock_release(&lock_s, 1);
   }
+}
 
 /* addtest with cmp and swap */
 void* ccount(void* arg) {
-
-
+	long iterations = (long)arg;
+  	long i;
+	for (i = 0; i < iterations; i++) {
+		add(&counter, 1);
+	}
+	for (i = 0; i < iterations; i++) {
+		add(&counter, -1);
+	}
 }
 
 void addtest(long nthreads, long niter) {
