@@ -13,12 +13,8 @@ void add(long long *pointer, long long value) {
     *pointer = sum;
 }
 
-<<<<<<< HEAD
 void* thread_func(void* arg) {
-=======
-void thread_func(long long iterations) {
 	int i;
->>>>>>> 96c7acabcf2b4bc6633270b4c0d5945972b47a2d
 	for (i = 0; i < iterations; i++) {
 		add(&counter, 1);
 	}
@@ -66,7 +62,7 @@ void addtest(int nthreads, int niter) {
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
 		int thread_ret = pthread_create(&tids[i], NULL, thread_func, niter);
-		if (thread_ret != 0) {				//if (ret)... same thing.
+		if (thread_ret != 0) {
 			// TODO: error handling
 			exit_status = 1;
 		}
@@ -74,9 +70,8 @@ void addtest(int nthreads, int niter) {
 
 	// wait for threads to complete, join.
 	for (i = 0; i < nthreads; i++) {
-		pthread_join(tids[i], NULL); // TODO: not sure how this retval arg works
+		pthread_join(tids[i], NULL);
 	}
-
 
 	// get ending time for run
 	clock_gettime(clk, tp);
@@ -87,7 +82,7 @@ void addtest(int nthreads, int niter) {
 
 	// error message if counter not zero
 	if (counter != 0) {
-		fprintf(stderr, "ERROR: final count = %llu\n", counter);
+		fprintf(stderr, "ERROR: final count = %lld\n", counter);
 		exit_status = 1;
 		return;
 	}
