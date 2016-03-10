@@ -114,38 +114,43 @@ void addtest(int nthreads, int niter) {
 
 int main(int argc, char **argv) {
 	while (1) {
-    static struct option long_options[] =
-    {
-	    { "threads=", required_argument, 0, 't' },
-		{ "iterations=", required_argument, 0, 'i' },
-		{ 0, 0, 0, 0 }
-    };
-    int option_index = 0;
-    int c = getopt_long(argc, argv, "", long_options, &option_index);
+	    static struct option long_options[] =
+	    {
+		    { "threads", optional_argument, 0, 't' },
+			{ "iter", optional_argument, 0, 'i' },
+			{ 0, 0, 0, 0 }
+	    };
+	    int option_index = 0;
+	    int c = getopt_long(argc, argv, "", long_options, &option_index);
 
-    /* Detect the end of options */
-    if (c == -1) {
-      break;
-    }
+	    /* Detect the end of options */
+	    if (c == -1) {
+	      	break;
+	    }
 
-    switch (c)
-      {
-      /* nthreads */ 
-      case 't':
-      	// TOOD: default = 1
-      	if (optind < argc) {
-	    	int nthreads = argv[optind];
+	    switch (c)
+	    {
+	      	/* nthreads */ 
+	    	case 't':
+	    		if(optarg) {		//threads=<something>
+	    			nthreads = optarg
+	    		}
+	    		else {
+	    			nthreads = 1;	//default 1
+	    		}
+		      	break;
+	      	/* niterations */
+	      	case 'i':
+				if(optarg) {
+					iterations = optarg;
+				}
+				else {
+					iterations = 1;
+				}
+	      		break;
+	      	default: 
+	      		break;
 	  	}
-      	break;
-      /* niterations */
-      case 'i':
-      	// TOOD: default = 1
-      	if (optind < argc) {
-	    	int niter = argv[optind];
-	  	}
-      	break;
-      default: 
-      	break;
-      }
-  }
+	  	
+ 	}
 }
