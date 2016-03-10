@@ -111,7 +111,7 @@ void addtest(long nthreads, long niter) {
 
 	// wait for threads to complete, join.
 	for (i = 0; i < nthreads; i++) {
-		int thread_ret = pthread_join(tids[i], NULL);
+		thread_ret = pthread_join(tids[i], NULL);
 		if(thread_ret != 0) {
 		  fprintf(stderr, "Error joining threads\n");
 			exit_status = 1;
@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
 	      		c = compare and swap */
 	      	case 's':
 	      		if (optarg) {
-	      			sync = (char)optarg;
+	      			sync = optarg;
 	      			fprintf(stderr, "sync=%c\n", sync);
 	      		}
 	      		else {
