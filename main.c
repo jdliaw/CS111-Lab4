@@ -29,7 +29,6 @@ void* thread_func(void* arg) {
 	for (i = 0; i < iterations; i++) {
 		add(&counter, -1);
 	}
-	// TODO: exit to re-join parent thread?
 }
 
 /* addtest:
@@ -49,22 +48,18 @@ prints to stdout
 If there were no errors, exit with a status of zero, else a non-zero status */
 
 void addtest(int nthreads, int niter) {
-	// TODO: nthreads, niter default = 1
 	int exit_status = 0;
 	long long counter = 0;
 	fprintf(stderr, "in addtest\ncounter: %lld\nexit_status: %d\n", counter, exit_status);
-	//pthread_t *threads;
-	//clock_t clk = CLOCK_MONOTONIC;
 	struct timespec tp;  /* time_t tv_sec; // whole secs >= 0
 							long tv_nsec; // nanoseconds */
-	int clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp); // TODO: not sure what clk_id should be.. CLOCK_REALTIME?
+	int clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp);
 	if (clock_ret != 0) {
-		//TODO: error handling
 	  fprintf(stderr, "Error in clock_gettime()\n");
 	  exit_status = 1;
 	}
 	long start_time = tp.tv_nsec; // want "high resolution" aka in ns
-	fprintf(stderr, "start_time: %l", start_time);
+	fprintf(stderr, "start_time: %li\n", start_time);
 
 	//malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
@@ -78,8 +73,6 @@ void addtest(int nthreads, int niter) {
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
 		int thread_ret = pthread_create(&tids[i], NULL, thread_func, (void*)args);
-		if (thread_ret != 0) {
-			// TODO: error handling
 		  fprintf(stderr,"Error creating threads\n");
 		  exit_status = 1;
 		}
@@ -87,7 +80,7 @@ void addtest(int nthreads, int niter) {
 
 	// wait for threads to complete, join.
 	for (i = 0; i < nthreads; i++) {
-		int thread_ret = pthread_join(tids[i], NULL); // TODO: not sure how this retval arg works
+		int thread_ret = pthread_join(tids[i], NULL);
 		if(thread_ret != 0) {
 		  fprintf(stderr, "Error joining threads\n");
 			exit_status = 1;
@@ -113,7 +106,7 @@ void addtest(int nthreads, int niter) {
 	fprintf(stdout, "elapsed time: %lu ns\n", elapsed_time);
 	fprintf(stdout, "per operation: %lu ns\n", average_time);
 
-	// TODO: exit non-zero status if errors, exit 0 if no errors.
+	// exit non-zero status if errors, exit 0 if no errors.
 	exit(exit_status);
 }
 
