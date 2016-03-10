@@ -39,7 +39,28 @@ void* count(void* arg) {
 }
 
 /* addtest with pthread_mutex */
-void* mutex_count(void* arg) {
+void* mcount(void* arg) {
+	long iterations = (long)arg;
+  	long i;
+	for (i = 0; i < iterations; i++) {
+		pthread_mutex_lock(&lock);
+		add(&counter, 1);
+		pthread_mutext_unlock(&lock);
+	}
+	for (i = 0; i < iterations; i++) {
+		pthread_mutex_lock(&lock);
+		add(&counter, -1);
+		pthread_mutext_unlock(&lock);
+	}
+}
+
+/* addtest with spinlocks */
+void* scount(void* arg) {
+
+}
+
+/* addtest with cmp and swap */
+void* ccount(void* arg) {
 
 }
 
@@ -69,13 +90,13 @@ void addtest(long nthreads, long niter) {
 	for (i = 0; i < nthreads; i++) {
 		// depending on sync option, run corresponding thread function
 		if (sync == 'm') {
-			int thread_ret = pthread_create(&tids[i], NULL, mutex_count, (void*)niter);
+			int thread_ret = pthread_create(&tids[i], NULL, mcount, (void*)niter);
 		}
 		else if (sync == 's') {
-			int thread_ret = pthread_create(&tids[i], NULL, spinlock_count, (void*)niter);
+			int thread_ret = pthread_create(&tids[i], NULL, scount, (void*)niter);
 		}
 		else if (sync == 'c') {
-			int thread_ret = pthread_create(&tids[i], NULL, cmpswap_count, (void*)niter);
+			int thread_ret = pthread_create(&tids[i], NULL, ccount, (void*)niter);
 		}
 		else {
 			int thread_ret = pthread_create(&tids[i], NULL, count, (void*)niter);
