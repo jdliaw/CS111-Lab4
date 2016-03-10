@@ -12,6 +12,9 @@
 static long long counter;
 static pthread_mutex_t lock;
 
+
+volatile int lock_s = 0;
+
 int opt_yield;
 char sync;
 
@@ -39,6 +42,26 @@ void* count(void* arg) {
 }
 
 /* addtest with pthread_mutex */
+
+void* mutex_count(void* arg) {
+
+}
+
+void* s_count(void*arg) {
+  long iterations = (long)arg;
+  long i;
+  for(i = 0; i < iterations; i++) {
+    while(__sync_lock_test_and_set(&lock_s, 1));
+    add(&counter, 1);
+    __sync_lock_release(&lock_s, 1);
+  }
+
+  for(i = 0; i < iterations; i++) {
+    while(__sync_lock_test_and_set(&lock_s, 1));
+    add(&counter, -1);
+    __sync_lock_release(&lock_s, 1);
+  }
+
 void* mcount(void* arg) {
 	long iterations = (long)arg;
   	long i;
@@ -62,6 +85,7 @@ void* scount(void* arg) {
 /* addtest with cmp and swap */
 void* ccount(void* arg) {
 
+
 }
 
 void addtest(long nthreads, long niter) {
@@ -74,21 +98,20 @@ void addtest(long nthreads, long niter) {
 	  fprintf(stderr, "Error in clock_gettime()\n");
 	  exit_status = 1;
 	}
+
 	long start_time = tp.tv_nsec; // want "high resolution" aka in ns
 	fprintf(stderr, "start_time: %lu\n", start_time);
 
 	//malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
 
-	// struct for thread args
-	struct Threadargs *args = malloc(sizeof(args));
-	args->counter = counter;
-	args->iterations = niter;
-
 	// start threads
 	unsigned i;
+	int thread_ret;
 	for (i = 0; i < nthreads; i++) {
 		// depending on sync option, run corresponding thread function
+
+
 		int thread_ret = 0;
 		if (sync == 'm') {
 			thread_ret = pthread_create(&tids[i], NULL, mcount, (void*)niter);
@@ -102,6 +125,7 @@ void addtest(long nthreads, long niter) {
 		else {
 			thread_ret = pthread_create(&tids[i], NULL, count, (void*)niter);
 		}
+
 		// error handling
 		if (thread_ret != 0) {
 		  fprintf(stderr,"Error creating threads\n");
