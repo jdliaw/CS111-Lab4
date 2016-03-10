@@ -52,16 +52,19 @@ void addtest(int nthreads, int niter) {
 	// TODO: nthreads, niter default = 1
 	int exit_status = 0;
 	long long counter = 0;
-	pthread_t *threads;
+	fprintf(stderr, "in addtest\ncounter: %lld\nexit_status: %d\n", counter, exit_status);
+	//pthread_t *threads;
 	//clock_t clk = CLOCK_MONOTONIC;
-	struct timespec *tp;  /* time_t tv_sec; // whole secs >= 0
+	struct timespec tp;  /* time_t tv_sec; // whole secs >= 0
 							long tv_nsec; // nanoseconds */
-	int clock_ret = clock_gettime(CLOCK_MONOTONIC, tp); // TODO: not sure what clk_id should be.. CLOCK_REALTIME?
+	int clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp); // TODO: not sure what clk_id should be.. CLOCK_REALTIME?
 	if (clock_ret != 0) {
 		//TODO: error handling
+	  fprintf(stderr, "Error in clock_gettime()\n");
+	  exit_status = 1;
 	}
-	long start_time = tp->tv_nsec; // want "high resolution" aka in ns
-
+	long start_time = tp.tv_nsec; // want "high resolution" aka in ns
+	fprintf(stderr, "start_time: %l", start_time);
 
 	//malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
@@ -77,7 +80,8 @@ void addtest(int nthreads, int niter) {
 		int thread_ret = pthread_create(&tids[i], NULL, thread_func, (void*)args);
 		if (thread_ret != 0) {
 			// TODO: error handling
-			exit_status = 1;
+		  fprintf(stderr,"Error creating threads\n");
+		  exit_status = 1;
 		}
 	}
 
@@ -85,13 +89,14 @@ void addtest(int nthreads, int niter) {
 	for (i = 0; i < nthreads; i++) {
 		int thread_ret = pthread_join(tids[i], NULL); // TODO: not sure how this retval arg works
 		if(thread_ret != 0) {
+		  fprintf(stderr, "Error joining threads\n");
 			exit_status = 1;
 		}
 	}
 
 	// get ending time for run
-	clock_gettime(CLOCK_MONOTONIC, tp);
-	long end_time = tp->tv_nsec;
+	clock_gettime(CLOCK_MONOTONIC, &tp);
+	long end_time = tp.tv_nsec;
 	long elapsed_time = end_time - start_time;
 	int noperations = nthreads * niter * 2;
 	long average_time = elapsed_time / noperations;
@@ -105,8 +110,8 @@ void addtest(int nthreads, int niter) {
 
 	// print stuff to stdout
 	fprintf(stdout, "%d threads x %d iterations x (add + subtract) = %d operations\n", nthreads, niter, noperations);
-	fprintf(stdout, "elapsed time: %lu\n", elapsed_time);
-	fprintf(stdout, "per operation: %lu\n", average_time);
+	fprintf(stdout, "elapsed time: %lu ns\n", elapsed_time);
+	fprintf(stdout, "per operation: %lu ns\n", average_time);
 
 	// TODO: exit non-zero status if errors, exit 0 if no errors.
 	exit(exit_status);
