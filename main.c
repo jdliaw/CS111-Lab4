@@ -127,13 +127,15 @@ int main(int argc, char **argv) {
 	    if (c == -1) {
 	      	break;
 	    }
+	    int nthreads = 0;
+	    int iterations = 0;
 
 	    switch (c)
 	    {
 	      	/* nthreads */ 
 	    	case 't':
 	    		if(optarg) {		//threads=<something>
-	    			nthreads = optarg
+	    			nthreads = optarg;
 	    		}
 	    		else {
 	    			nthreads = 1;	//default 1
@@ -151,6 +153,6 @@ int main(int argc, char **argv) {
 	      	default: 
 	      		break;
 	  	}
-	  	
+
  	}
 }
