@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
 	    static struct option long_options[] =
 	    {
 		    { "threads", optional_argument, 0, 't' },
-			{ "iterations", optional_argument, 0, 'i' },
+			{ "iter", optional_argument, 0, 'i' },
 			{ 0, 0, 0, 0 }
 	    };
 	    int option_index = 0;
