@@ -9,7 +9,7 @@
 /* Part 1 */
 
 struct Threadargs {
-	long long *counter;
+	long long counter;
 	int iterations;
 };
 
@@ -68,7 +68,7 @@ void addtest(int nthreads, int niter) {
 
 	// struct for thread args
 	struct Threadargs *args;
-	args->counter = &counter;
+	args->counter = counter;
 	args->iterations = niter;
 
 	// start threads
@@ -128,24 +128,41 @@ int main(int argc, char **argv) {
 	      break;
 	    }
 
+	    int nthreads = 0;
+	    int iterations = 0;
+
+	    fprintf(stderr, "before switch");
+
 	    switch (c)
 	    {
-	      /* nthreads */ 
-	    case 't':
-	      	// TOOD: default = 1
-	      	if (optind < argc) {
-		    	int nthreads = argv[optind];
-		  	}
-	      	break;
-	      /* niterations */
-	    case 'i':
-	      	// TOOD: default = 1
-	      	if (optind < argc) {
-		    	int niter = argv[optind];
-		  	}
-	      	break;
-	    default: 
-	      	break;
-	    }
-  	}
+	      	/* nthreads */ 
+	    	case 't':
+	    		if(optarg) {		//threads=<something>
+	    			nthreads = optarg;
+	    			fprintf(stderr, "threads=%d", nthreads);
+	    		}
+	    		else {
+	    			nthreads = 1;	//default 1
+	    			fprintf(stderr, "threads=%d", nthreads);
+	    		}
+		      	break;
+	      	/* niterations */
+	      	case 'i':
+				if(optarg) {
+					iterations = optarg;
+					fprintf(stderr, "iter=%d", iterations);
+				}
+				else {
+					iterations = 1;
+					fprintf(stderr, "threads=%d", nthreads);
+				}
+	      		break;
+	      	default: 
+	      		break;
+	  	}
+
+	  	addtest(nthreads, iterations);
+
+ 	}
+ 	return 0;
 }
