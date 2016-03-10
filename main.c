@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
 	      	/* nthreads */ 
 	    	case 't':
 	    		if(optarg) {		//threads=<something>
-	    			nthreads = optarg;
+	    			nthreads = atoi(optarg);
 	    			fprintf(stderr, "threads=%d\n", nthreads);
 	    		}
 	    		else {
@@ -149,20 +149,19 @@ int main(int argc, char **argv) {
 	      	/* niterations */
 	      	case 'i':
 				if(optarg) {
-					iterations = optarg;
+					iterations = atoi(optarg);
 					fprintf(stderr, "iter=%d\n", iterations);
 				}
 				else {
 					iterations = 1;
-					fprintf(stderr, "threads=%d\n", nthreads);
+					fprintf(stderr, "iter=%d\n", iterations);
 				}
 	      		break;
 	      	default: 
 	      		break;
 	  	}
 
-	  	addtest(nthreads, iterations);
-
  	}
+ 	addtest(nthreads, iterations);
  	return 0;
 }
