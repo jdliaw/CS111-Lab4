@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 	    int nthreads = 0;
 	    int iterations = 0;
 
-	    fprintf(stderr, "before switch");
+	    fprintf(stderr, "before switch\n");
 
 	    switch (c)
 	    {
@@ -139,22 +139,22 @@ int main(int argc, char **argv) {
 	    	case 't':
 	    		if(optarg) {		//threads=<something>
 	    			nthreads = optarg;
-	    			fprintf(stderr, "threads=%d", nthreads);
+	    			fprintf(stderr, "threads=%d\n", nthreads);
 	    		}
 	    		else {
 	    			nthreads = 1;	//default 1
-	    			fprintf(stderr, "threads=%d", nthreads);
+	    			fprintf(stderr, "threads=%d\n", nthreads);
 	    		}
 		      	break;
 	      	/* niterations */
 	      	case 'i':
 				if(optarg) {
 					iterations = optarg;
-					fprintf(stderr, "iter=%d", iterations);
+					fprintf(stderr, "iter=%d\n", iterations);
 				}
 				else {
 					iterations = 1;
-					fprintf(stderr, "threads=%d", nthreads);
+					fprintf(stderr, "threads=%d\n", nthreads);
 				}
 	      		break;
 	      	default: 
