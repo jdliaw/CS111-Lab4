@@ -121,12 +121,14 @@ void addtest(long nthreads, long niter) {
 int main(int argc, char **argv) {
 	long nthreads = 0;
 	long iterations = 0;
+	char sync;
 
 	while (1) {
 	    static struct option long_options[] =
 	    {
 		    { "threads", optional_argument, 0, 't' },
 			{ "iter", optional_argument, 0, 'i' },
+			{ "sync", optional_argument, 0, 's' },
 			{ "yield", optional_argument, 0, 'y' },
 			{ 0, 0, 0, 0 }
 	    };
@@ -162,6 +164,21 @@ int main(int argc, char **argv) {
 					fprintf(stderr, "iter=%lu\n", iterations);
 				}
 	      		break;
+	      	/* sync
+	      		m = mutex
+	      		s = spinlock
+	      		c = compare and swap */
+	      	case 's':
+	      		if (optarg) {
+	      			sync = optarg;
+	      			fprintf(stderr, "sync=%c\n", sync);
+	      		}
+	      		else {
+	      			fprintf(stderr, "Invalid sync option\n");
+	      			exit(1);
+	      		}
+	      		break;
+	      	/* yield */
 	      	case 'y':
 	      		if (optarg) {
 	      			opt_yield = atoi(optarg);
