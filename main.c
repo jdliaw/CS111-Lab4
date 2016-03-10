@@ -51,7 +51,7 @@ void sadd(long long *pointer, long long value) {
 }
 
 /* add function with cmp and swap */
-void cadd(long long pointer, long long value) {
+void cadd(long long *pointer, long long value) {
 	long long sum;
 	long long orig;
 	do {
