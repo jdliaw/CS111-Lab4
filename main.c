@@ -47,10 +47,9 @@ prints to stdout
 	the total run time (in nanoseconds), and the average time per operation (in nanoseconds).
 If there were no errors, exit with a status of zero, else a non-zero status */
 
-void addtest(int nthreads, int niter) {
+void addtest(long nthreads, long niter) {
 	int exit_status = 0;
 	long long counter = 0;
-	fprintf(stderr, "in addtest\ncounter: %lld\nexit_status: %d\n", counter, exit_status);
 	struct timespec tp;  /* time_t tv_sec; // whole secs >= 0
 							long tv_nsec; // nanoseconds */
 	int clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp);
@@ -59,7 +58,7 @@ void addtest(int nthreads, int niter) {
 	  exit_status = 1;
 	}
 	long start_time = tp.tv_nsec; // want "high resolution" aka in ns
-	fprintf(stderr, "start_time: %li\n", start_time);
+	fprintf(stderr, "start_time: %lu\n", start_time);
 
 	//malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
@@ -92,7 +91,7 @@ void addtest(int nthreads, int niter) {
 	clock_gettime(CLOCK_MONOTONIC, &tp);
 	long end_time = tp.tv_nsec;
 	long elapsed_time = end_time - start_time;
-	int noperations = nthreads * niter * 2;
+	long noperations = nthreads * niter * 2;
 	long average_time = elapsed_time / noperations;
 
 	// error message if counter not zero
@@ -103,7 +102,7 @@ void addtest(int nthreads, int niter) {
 	}
 
 	// print stuff to stdout
-	fprintf(stdout, "%d threads x %d iterations x (add + subtract) = %d operations\n", nthreads, niter, noperations);
+	fprintf(stdout, "%lu threads x %lu iterations x (add + subtract) = %lu operations\n", nthreads, niter, noperations);
 	fprintf(stdout, "elapsed time: %lu ns\n", elapsed_time);
 	fprintf(stdout, "per operation: %lu ns\n", average_time);
 
@@ -112,8 +111,8 @@ void addtest(int nthreads, int niter) {
 }
 
 int main(int argc, char **argv) {
-	int nthreads = 0;
-	int iterations = 0;
+	long nthreads = 0;
+	long iterations = 0;
 	while (1) {
 	    static struct option long_options[] =
 	    {
@@ -128,8 +127,6 @@ int main(int argc, char **argv) {
 	    if (c == -1) {
 	      break;
 	    }
-
-	    fprintf(stderr, "before switch\n");
 
 	    switch (c)
 	    {
