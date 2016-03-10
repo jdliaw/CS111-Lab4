@@ -10,8 +10,10 @@
 /* Part 1 */
 
 static long long counter;
+static pthread_mutex_t lock;
 
 int opt_yield;
+char sync;
 
 struct Threadargs {
 	long long counter;
@@ -25,10 +27,7 @@ void add(long long *pointer, long long value) {
     *pointer = sum;
 }
 
-void* thread_func(void* arg) {
-  //struct Threadargs *args = (struct Threadargs*)arg;
-  //	long long counter = args->counter;
-  //	long iterations = args->iterations;
+void* count(void* arg) {
   long iterations = (long)arg;
   long i;
 	for (i = 0; i < iterations; i++) {
@@ -40,7 +39,7 @@ void* thread_func(void* arg) {
 }
 
 /* addtest with pthread_mutex */
-void m_addtest(long nthreads, long niter) {
+void* mutex_count(void* arg) {
 
 }
 
@@ -68,7 +67,20 @@ void addtest(long nthreads, long niter) {
 	// start threads
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
-		int thread_ret = pthread_create(&tids[i], NULL, thread_func, (void*)niter);
+		// depending on sync option, run corresponding thread function
+		if (sync == 'm') {
+			int thread_ret = pthread_create(&tids[i], NULL, mutex_count, (void*)niter);
+		}
+		else if (sync == 's') {
+			int thread_ret = pthread_create(&tids[i], NULL, spinlock_count, (void*)niter);
+		}
+		else if (sync == 'c') {
+			int thread_ret = pthread_create(&tids[i], NULL, cmpswap_count, (void*)niter);
+		}
+		else {
+			int thread_ret = pthread_create(&tids[i], NULL, count, (void*)niter);
+		}
+		// error handling
 		if (thread_ret != 0) {
 		  fprintf(stderr,"Error creating threads\n");
 		  exit_status = 1;
@@ -110,7 +122,6 @@ void addtest(long nthreads, long niter) {
 int main(int argc, char **argv) {
 	long nthreads = 0;
 	long iterations = 0;
-	char sync;
 
 	while (1) {
 	    static struct option long_options[] =
@@ -153,7 +164,7 @@ int main(int argc, char **argv) {
 					fprintf(stderr, "iter=%lu\n", iterations);
 				}
 	      		break;
-	      	/* sync
+	      	/* sync option
 	      		m = mutex
 	      		s = spinlock
 	      		c = compare and swap */
@@ -167,7 +178,7 @@ int main(int argc, char **argv) {
 	      			exit(1);
 	      		}
 	      		break;
-	      	/* yield */
+	      	/* yield option */
 	      	case 'y':
 	      		if (optarg) {
 	      			opt_yield = atoi(optarg);
@@ -183,19 +194,8 @@ int main(int argc, char **argv) {
 	  	}
 
  	}
- 	// run appropriate protected add functions given sync option
- 	if (sync == 'm') {
- 		m_addtest(nthreads, iterations);
- 	}
- 	else if (sync == 's') {
 
- 	}
- 	else if (sync == 'c') {
-
- 	}
- 	else {
- 		addtest(nthreads, iterations);
- 	}
+ 	addtest(nthreads, iterations);
 
  	return 0;
 }
