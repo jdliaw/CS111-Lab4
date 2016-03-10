@@ -11,8 +11,6 @@
 
 static long long counter;
 static pthread_mutex_t lock;
-
-
 volatile int lock_s = 0;
 
 int opt_yield;
@@ -30,59 +28,73 @@ void add(long long *pointer, long long value) {
     *pointer = sum;
 }
 
-void* count(void* arg) {
-  long iterations = (long)arg;
-  long i;
-	for (i = 0; i < iterations; i++) {
-		add(&counter, 1);
-	}
-	for (i = 0; i < iterations; i++) {
-		add(&counter, -1);
-	}
+/* add function with mutex */
+
+void madd(long long *pointer, long long value) {
+	pthread_mutex_lock(&lock);
+	long long sum = *pointer + value;
+	if (opt_yield)
+		pthread_yield();
+	*pointer = sum;
+	pthread_mutex_unlock(&lock);
 }
 
-/* addtest with mutex */
-void* mcount(void* arg) {
+/* add function with spinlock */
+
+void sadd(long long *pointer, long long value) {
+	while(__sync_lock_test_and_set(&lock_s, 1));
+	long long sum = *pointer + value;
+	if (opt_yield)
+		pthread_yield();
+	*pointer = sum;
+	__sync_lock_release(&lock_s, 1);
+}
+
+/* add function with cmp and swap */
+void cadd(long long pointer, long long value) {
+	long long sum;
+	long long orig;
+	do {
+		orig = *pointer;
+		sum = orig + value;
+	} while (__sync_val_compare_and_swap(pointer, orig, sum) != orig);
+}
+
+/* thread function */
+void* threadfunc(void* arg) {
 	long iterations = (long)arg;
-  	long i;
-	for (i = 0; i < iterations; i++) {
-		pthread_mutex_lock(&lock);
-		add(&counter, 1);
-		pthread_mutex_unlock(&lock);
+	long i;
+	if (sync == 'm') {
+		for (i = 0; i < iterations; i++) {
+			madd(&counter, 1);
+		}
+		for (i = 0; i < iterations; i++) {
+			madd(&counter, -1);
+		}
 	}
-	for (i = 0; i < iterations; i++) {
-		pthread_mutex_lock(&lock);
-		add(&counter, -1);
-		pthread_mutex_unlock(&lock);
+	else if (sync == 's') {
+		for (i = 0; i < iterations; i++) {
+			sadd(&counter, 1);
+		}
+		for (i = 0; i < iterations; i++) {
+			sadd(&counter, -1);
+		}
 	}
-}
-
-/* addtest with spinlock */
-void* scount(void*arg) {
-  long iterations = (long)arg;
-  long i;
-  for(i = 0; i < iterations; i++) {
-    while(__sync_lock_test_and_set(&lock_s, 1));
-    add(&counter, 1);
-    __sync_lock_release(&lock_s, 1);
-  }
-
-  for(i = 0; i < iterations; i++) {
-    while(__sync_lock_test_and_set(&lock_s, 1));
-    add(&counter, -1);
-    __sync_lock_release(&lock_s, 1);
-  }
-}
-
-/* addtest with cmp and swap */
-void* ccount(void* arg) {
-	long iterations = (long)arg;
-  	long i;
-	for (i = 0; i < iterations; i++) {
-		add(&counter, 1);
+	else if (sync == 'c') {
+		for (i = 0; i < iterations; i++) {
+			cadd(&counter, 1);
+		}
+		for (i = 0; i < iterations; i++) {
+			cadd(&counter, -1);
+		}
 	}
-	for (i = 0; i < iterations; i++) {
-		add(&counter, -1);
+	else {
+		for (i = 0; i < iterations; i++) {
+			add(&counter, 1);
+		}
+		for (i = 0; i < iterations; i++) {
+			add(&counter, -1);
+		}
 	}
 }
 
@@ -105,25 +117,8 @@ void addtest(long nthreads, long niter) {
 
 	// start threads
 	unsigned i;
-	int thread_ret;
 	for (i = 0; i < nthreads; i++) {
-		// depending on sync option, run corresponding thread function
-
-
-		int thread_ret = 0;
-		if (sync == 'm') {
-			thread_ret = pthread_create(&tids[i], NULL, mcount, (void*)niter);
-		}
-		else if (sync == 's') {
-			thread_ret = pthread_create(&tids[i], NULL, scount, (void*)niter);
-		}
-		else if (sync == 'c') {
-			thread_ret = pthread_create(&tids[i], NULL, ccount, (void*)niter);
-		}
-		else {
-			thread_ret = pthread_create(&tids[i], NULL, count, (void*)niter);
-		}
-
+		int thread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)niter);
 		// error handling
 		if (thread_ret != 0) {
 		  fprintf(stderr,"Error creating threads\n");
@@ -133,7 +128,7 @@ void addtest(long nthreads, long niter) {
 
 	// wait for threads to complete, join.
 	for (i = 0; i < nthreads; i++) {
-		thread_ret = pthread_join(tids[i], NULL);
+		int thread_ret = pthread_join(tids[i], NULL);
 		if(thread_ret != 0) {
 		  fprintf(stderr, "Error joining threads\n");
 			exit_status = 1;
