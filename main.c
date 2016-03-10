@@ -89,17 +89,18 @@ void addtest(long nthreads, long niter) {
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
 		// depending on sync option, run corresponding thread function
+		int thread_ret = 0;
 		if (sync == 'm') {
-			int thread_ret = pthread_create(&tids[i], NULL, mcount, (void*)niter);
+			thread_ret = pthread_create(&tids[i], NULL, mcount, (void*)niter);
 		}
 		else if (sync == 's') {
-			int thread_ret = pthread_create(&tids[i], NULL, scount, (void*)niter);
+			thread_ret = pthread_create(&tids[i], NULL, scount, (void*)niter);
 		}
 		else if (sync == 'c') {
-			int thread_ret = pthread_create(&tids[i], NULL, ccount, (void*)niter);
+			thread_ret = pthread_create(&tids[i], NULL, ccount, (void*)niter);
 		}
 		else {
-			int thread_ret = pthread_create(&tids[i], NULL, count, (void*)niter);
+			thread_ret = pthread_create(&tids[i], NULL, count, (void*)niter);
 		}
 		// error handling
 		if (thread_ret != 0) {
@@ -191,7 +192,7 @@ int main(int argc, char **argv) {
 	      		c = compare and swap */
 	      	case 's':
 	      		if (optarg) {
-	      			sync = optarg;
+	      			sync = (char)optarg;
 	      			fprintf(stderr, "sync=%c\n", sync);
 	      		}
 	      		else {
