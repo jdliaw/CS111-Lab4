@@ -41,27 +41,7 @@ void* count(void* arg) {
 	}
 }
 
-/* addtest with pthread_mutex */
-
-void* mutex_count(void* arg) {
-
-}
-
-void* s_count(void*arg) {
-  long iterations = (long)arg;
-  long i;
-  for(i = 0; i < iterations; i++) {
-    while(__sync_lock_test_and_set(&lock_s, 1));
-    add(&counter, 1);
-    __sync_lock_release(&lock_s, 1);
-  }
-
-  for(i = 0; i < iterations; i++) {
-    while(__sync_lock_test_and_set(&lock_s, 1));
-    add(&counter, -1);
-    __sync_lock_release(&lock_s, 1);
-  }
-
+/* addtest with mutex */
 void* mcount(void* arg) {
 	long iterations = (long)arg;
   	long i;
@@ -77,10 +57,21 @@ void* mcount(void* arg) {
 	}
 }
 
-/* addtest with spinlocks */
-void* scount(void* arg) {
+/* addtest with spinlock */
+void* scount(void*arg) {
+  long iterations = (long)arg;
+  long i;
+  for(i = 0; i < iterations; i++) {
+    while(__sync_lock_test_and_set(&lock_s, 1));
+    add(&counter, 1);
+    __sync_lock_release(&lock_s, 1);
+  }
 
-}
+  for(i = 0; i < iterations; i++) {
+    while(__sync_lock_test_and_set(&lock_s, 1));
+    add(&counter, -1);
+    __sync_lock_release(&lock_s, 1);
+  }
 
 /* addtest with cmp and swap */
 void* ccount(void* arg) {
