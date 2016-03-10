@@ -73,6 +73,7 @@ void addtest(int nthreads, int niter) {
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
 		int thread_ret = pthread_create(&tids[i], NULL, thread_func, (void*)args);
+		if (thread_ret != 0) {
 		  fprintf(stderr,"Error creating threads\n");
 		  exit_status = 1;
 		}
