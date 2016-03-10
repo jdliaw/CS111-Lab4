@@ -64,7 +64,7 @@ void addtest(int nthreads, int niter) {
 	  exit_status = 1;
 	}
 	long start_time = tp.tv_nsec; // want "high resolution" aka in ns
-	fprintf(stderr, "start_time: %l", start_time);
+	fprintf(stderr, "start_time: %li\n", start_time);
 
 	//malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
