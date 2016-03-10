@@ -1,5 +1,6 @@
 // CS 111 Lab 4
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -7,6 +8,8 @@
 #include <pthread.h>
 
 /* Part 1 */
+
+static long long counter;
 
 int opt_yield;
 
@@ -23,10 +26,11 @@ void add(long long *pointer, long long value) {
 }
 
 void* thread_func(void* arg) {
-	struct Threadargs *args = (struct Threadargs*)arg;
-	long long counter = args->counter;
-	long iterations = args->iterations;
-	long i;
+  //struct Threadargs *args = (struct Threadargs*)arg;
+  //	long long counter = args->counter;
+  //	long iterations = args->iterations;
+  long iterations = (long)arg;
+  long i;
 	for (i = 0; i < iterations; i++) {
 		add(&counter, 1);
 	}
@@ -53,7 +57,7 @@ If there were no errors, exit with a status of zero, else a non-zero status */
 
 void addtest(long nthreads, long niter) {
 	int exit_status = 0;
-	long long counter = 0;
+	counter = 0;
 	struct timespec tp;  /* time_t tv_sec; // whole secs >= 0
 							long tv_nsec; // nanoseconds */
 	int clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp);
@@ -75,7 +79,7 @@ void addtest(long nthreads, long niter) {
 	// start threads
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
-		int thread_ret = pthread_create(&tids[i], NULL, thread_func, (void*)args);
+		int thread_ret = pthread_create(&tids[i], NULL, thread_func, (void*)niter);
 		if (thread_ret != 0) {
 		  fprintf(stderr,"Error creating threads\n");
 		  exit_status = 1;
