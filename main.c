@@ -8,21 +8,25 @@
 
 /* Part 1 */
 
+int opt_yield;
+
 struct Threadargs {
 	long long counter;
-	int iterations;
+	long iterations;
 };
 
 void add(long long *pointer, long long value) {
     long long sum = *pointer + value;
+    if (opt_yield)
+            pthread_yield();
     *pointer = sum;
 }
 
 void* thread_func(void* arg) {
 	struct Threadargs *args = (struct Threadargs*)arg;
 	long long counter = args->counter;
-	int iterations = args->iterations;
-	int i;
+	long iterations = args->iterations;
+	long i;
 	for (i = 0; i < iterations; i++) {
 		add(&counter, 1);
 	}
@@ -64,7 +68,7 @@ void addtest(long nthreads, long niter) {
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
 
 	// struct for thread args
-	struct Threadargs *args;
+	struct Threadargs *args = malloc(sizeof(args));
 	args->counter = counter;
 	args->iterations = niter;
 
@@ -113,11 +117,13 @@ void addtest(long nthreads, long niter) {
 int main(int argc, char **argv) {
 	long nthreads = 0;
 	long iterations = 0;
+
 	while (1) {
 	    static struct option long_options[] =
 	    {
 		    { "threads", optional_argument, 0, 't' },
 			{ "iter", optional_argument, 0, 'i' },
+			{ "yield", optional_argument, 0, 'y' };
 			{ 0, 0, 0, 0 }
 	    };
 	    int option_index = 0;
@@ -134,23 +140,32 @@ int main(int argc, char **argv) {
 	    	case 't':
 	    		if(optarg) {		//threads=<something>
 	    			nthreads = atoi(optarg);
-	    			fprintf(stderr, "threads=%d\n", nthreads);
+	    			fprintf(stderr, "threads=%lu\n", nthreads);
 	    		}
 	    		else {
 	    			nthreads = 1;	//default 1
-	    			fprintf(stderr, "threads=%d\n", nthreads);
+	    			fprintf(stderr, "threads=%lu\n", nthreads);
 	    		}
 		      	break;
 	      	/* niterations */
 	      	case 'i':
 				if(optarg) {
 					iterations = atoi(optarg);
-					fprintf(stderr, "iter=%d\n", iterations);
+					fprintf(stderr, "iter=%lu\n", iterations);
 				}
 				else {
 					iterations = 1;
-					fprintf(stderr, "iter=%d\n", iterations);
+					fprintf(stderr, "iter=%lu\n", iterations);
 				}
+	      		break;
+	      	case 'y':
+	      		if (optarg) {
+	      			opt_yield = atoi(optarg);
+	      			fprintf(stderr, "yield=%d\n", yield);
+	      		}
+	      		else {
+	      			opt_yield = 1;
+	      		}
 	      		break;
 	      	default: 
 	      		break;
