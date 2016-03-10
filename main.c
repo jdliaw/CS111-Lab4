@@ -8,12 +8,20 @@
 
 /* Part 1 */
 
+struct Threadargs {
+	long long *counter;
+	int iterations;
+};
+
 void add(long long *pointer, long long value) {
     long long sum = *pointer + value;
     *pointer = sum;
 }
 
 void* thread_func(void* arg) {
+	struct Threadargs *args = (struct Threadargs*)arg;
+	long long counter = args->counter;
+	int iterations = args->iterations;
 	int i;
 	for (i = 0; i < iterations; i++) {
 		add(&counter, 1);
@@ -45,10 +53,10 @@ void addtest(int nthreads, int niter) {
 	int exit_status = 0;
 	long long counter = 0;
 	pthread_t *threads;
-	clock_t clk = CLOCK_MONOTONIC;
+	//clock_t clk = CLOCK_MONOTONIC;
 	struct timespec *tp;  /* time_t tv_sec; // whole secs >= 0
 							long tv_nsec; // nanoseconds */
-	int clock_ret = clock_gettime(clk, tp); // TODO: not sure what clk_id should be.. CLOCK_REALTIME?
+	int clock_ret = clock_gettime(CLOCK_MONOTONIC, tp); // TODO: not sure what clk_id should be.. CLOCK_REALTIME?
 	if (clock_ret != 0) {
 		//TODO: error handling
 	}
@@ -58,10 +66,15 @@ void addtest(int nthreads, int niter) {
 	//malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
 
+	// struct for thread args
+	struct Threadargs *args;
+	args->counter = &counter;
+	args->iterations = niter;
+
 	// start threads
 	unsigned i;
 	for (i = 0; i < nthreads; i++) {
-		int thread_ret = pthread_create(&tids[i], NULL, thread_func, niter);
+		int thread_ret = pthread_create(&tids[i], NULL, thread_func, (void*)args);
 		if (thread_ret != 0) {
 			// TODO: error handling
 			exit_status = 1;
@@ -70,11 +83,14 @@ void addtest(int nthreads, int niter) {
 
 	// wait for threads to complete, join.
 	for (i = 0; i < nthreads; i++) {
-		pthread_join(tids[i], NULL);
+		int thread_ret = pthread_join(tids[i], NULL); // TODO: not sure how this retval arg works
+		if(thread_ret != 0) {
+			exit_status = 1;
+		}
 	}
 
 	// get ending time for run
-	clock_gettime(clk, tp);
+	clock_gettime(CLOCK_MONOTONIC, tp);
 	long end_time = tp->tv_nsec;
 	long elapsed_time = end_time - start_time;
 	int noperations = nthreads * niter * 2;
