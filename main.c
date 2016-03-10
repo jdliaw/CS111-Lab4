@@ -12,6 +12,7 @@
 static long long counter;
 static pthread_mutex_t lock;
 
+
 volatile int lock_s = 0;
 
 int opt_yield;
@@ -41,6 +42,7 @@ void* count(void* arg) {
 }
 
 /* addtest with pthread_mutex */
+
 void* mutex_count(void* arg) {
 
 }
@@ -59,6 +61,31 @@ void* s_count(void*arg) {
     add(&counter, -1);
     __sync_lock_release(&lock_s, 1);
   }
+
+void* mcount(void* arg) {
+	long iterations = (long)arg;
+  	long i;
+	for (i = 0; i < iterations; i++) {
+		pthread_mutex_lock(&lock);
+		add(&counter, 1);
+		pthread_mutext_unlock(&lock);
+	}
+	for (i = 0; i < iterations; i++) {
+		pthread_mutex_lock(&lock);
+		add(&counter, -1);
+		pthread_mutext_unlock(&lock);
+	}
+}
+
+/* addtest with spinlocks */
+void* scount(void* arg) {
+
+}
+
+/* addtest with cmp and swap */
+void* ccount(void* arg) {
+
+
 }
 
 void addtest(long nthreads, long niter) {
@@ -75,7 +102,6 @@ void addtest(long nthreads, long niter) {
 	long start_time = tp.tv_nsec; // want "high resolution" aka in ns
 	fprintf(stderr, "start_time: %lu\n", start_time);
 
-
 	//malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
 
@@ -84,18 +110,22 @@ void addtest(long nthreads, long niter) {
 	int thread_ret;
 	for (i = 0; i < nthreads; i++) {
 		// depending on sync option, run corresponding thread function
+
+
+		int thread_ret = 0;
 		if (sync == 'm') {
-			thread_ret = pthread_create(&tids[i], NULL, mutex_count, (void*)niter);
+			thread_ret = pthread_create(&tids[i], NULL, mcount, (void*)niter);
 		}
 		else if (sync == 's') {
-      			thread_ret = pthread_create(&tids[i], NULL, s_count, (void*)niter);
+			thread_ret = pthread_create(&tids[i], NULL, scount, (void*)niter);
 		}
 		else if (sync == 'c') {
-			thread_ret = pthread_create(&tids[i], NULL, count, (void*)niter);
-			}
+			thread_ret = pthread_create(&tids[i], NULL, ccount, (void*)niter);
+		}
 		else {
 			thread_ret = pthread_create(&tids[i], NULL, count, (void*)niter);
-			}
+		}
+
 		// error handling
 		if (thread_ret != 0) {
 		  fprintf(stderr,"Error creating threads\n");
@@ -186,7 +216,7 @@ int main(int argc, char **argv) {
 	      		c = compare and swap */
 	      	case 's':
 	      		if (optarg) {
-	      			sync = *optarg;
+	      			sync = (char)optarg;
 	      			fprintf(stderr, "sync=%c\n", sync);
 	      		}
 	      		else {
