@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
 	      		c = compare and swap */
 	      	case 's':
 	      		if (optarg) {
-	      			sync = optarg;
+	      			sync = *optarg;
 	      			fprintf(stderr, "sync=%c\n", sync);
 	      		}
 	      		else {
