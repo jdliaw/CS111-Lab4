@@ -4,20 +4,31 @@
 #include <getopt.h>
 #include <time.h>
 #include <pthread.h>
+#include <math.h>
 #include "SortedList.h"
 
-struct ThreadArgs {
-	SortedList_t* m_list;
-	SortedListElement_t* m_elements;
-	long long n;
+// global vars
+SortedList_t* list;
+SortedListElement_t* elements;
+const char* keys;
+
+// generate random key of length len
+void random_key(char* s, int len) { // TODO: s as pointer is ok?
+	// all possible chars
+	static const char alpha[] = "0123456789"
+		"abcdefghijklmnopqrstuvwxyz"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	// randomly choose one of possible char for each char in s
+	for (int i = 0; i < len; i++) {
+		s[i] = alpha[rand() % (sizeof(alpha)-1)];
+	}
+
+	s[len] = 0; //terminate with nullbyte
 }
 
 void* threadfunc(void* arg) {
-	// get args from struct
-	struct ThreadArgs* m_args = (struct ThreadArgs*) arg;
-	long long nelements = m_args->n;
-	SortedList_t* list = m_args->m_list;
-	SortedListElement_t* elements = m_args->m_elements;
+	long long nelements = (long long) arg;
 
 	// keep track of keys inserted
 	const char* keys = malloc(nelements * sizeof(char*));
@@ -32,11 +43,11 @@ void* threadfunc(void* arg) {
 	int len = length(list);
 
 	// look up each of keys inserted & delete each returned element
-	SortedListElement_t* element = malloc(sizeof(SortedListElement_t));
+	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
 
 	for (int i = 0; i < nelements; i++) {
-		element = lookup(list, &keys[i]);
-		delete(element);
+		target = lookup(list, &keys[i]);
+		delete(target);
 	}
 }
 
@@ -64,13 +75,41 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	int exit_status = 0;
 
 	// initialize an empty list
-	SortedList_t *list;
+	list = malloc(sizeof(SortedList_t));
 	list->key = NULL; // head key is null
 
 	// create and initialize (threads x iterations) list elements
 	long nelements = nthreads * niter;
-	SortedListElement_t *elements = malloc(nelements * sizeof(SortedListElement_t));
-	// TODO: random keys????
+	elements = malloc(nelements * sizeof(SortedListElement_t));
+	if (elements == NULL) {
+		fprintf(stderr, "Error allocating memory for list elements\n");
+		exit_status = 1;
+	}
+
+	// malloc array for random keys
+	keys = malloc(sizeof(char*) * nelements);
+	if (keys == NULL) {
+		fprintf(stderr, "Error allocating memory for keys array\n");
+		exit_status = 1;
+	}
+
+	// generate array of random keys
+	for (int i = 0; i < nelements; i++) {
+		int len = rand() % 15; // generate a random size for each key
+		keys[i] = malloc(sizeof(char*) * len);
+		if (keys[i] == NULL) {
+			fprintf(stderr, "Error allocating memory for key\n");
+			exit_status = 1;
+		}
+		random_key(keys[i], len);
+	}
+
+	// initialize elements with random keys
+	for (int i = 0; i < nelements; i++) {
+		elements[i]->key = keys[i];
+		elements[i]->next = NULL;
+		elements[i]->prev = NULL;
+	}
 
 	// get start time
 	struct timespec tp_start;
@@ -85,15 +124,8 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	// create and start threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
 
-	// struct for passing in necessary args to threadfunc
-	struct ThreadArgs* args = (struct ThreadArgs*) malloc(sizeof(struct ThreadArgs));
-	args->m_list = list;
-	args->m_elements = elements;
-	args->n = nelements;
-
 	for (int i = 0; i < nthreads; i++) {
-		// TODO: threadfunc args? list head, elements to insert, iterations, .....
-		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)args);
+		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)nelements);
 		if (pthread_ret != 0) {
 			fprintf(stderr, "Error creating threads\n");
 			exit_status = 1;
