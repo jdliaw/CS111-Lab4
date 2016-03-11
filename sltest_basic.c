@@ -58,9 +58,9 @@ void* threadfunc(void* arg) {
 		}
 		else
 			fprintf(stderr, "Target key: %c\n", target->key);
-		
+
 		int ret = SortedList_delete(target);
-		if (delete != 0) {
+		if (ret != 0) {
 			fprintf(stderr, "Failed to delete target from SortedList\n");
 			// TODO: error handling
 		}
