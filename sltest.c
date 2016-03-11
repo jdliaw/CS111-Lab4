@@ -6,7 +6,19 @@
 #include <pthread.h>
 #include "SortedList.h"
 
+struct ThreadArgs {
+	SortedList_t* m_list;
+	SortedListElement_t* m_elements;
+	long long n;
+}
+
 void* threadfunc(void* arg) {
+	// get args from struct
+	struct ThreadArgs* m_args = (struct ThreadArgs*) arg;
+	long long nelements = m_args->n;
+	SortedList_t* list = m_args->m_list;
+	SortedListElement_t* elements = m_args->m_elements;
+
 	// keep track of keys inserted
 	const char* keys = malloc(nelements * sizeof(char*));
 
@@ -21,7 +33,7 @@ void* threadfunc(void* arg) {
 
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* element = malloc(sizeof(SortedListElement_t));
-	
+
 	for (int i = 0; i < nelements; i++) {
 		element = lookup(list, &keys[i]);
 		delete(element);
@@ -73,9 +85,15 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	// create and start threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
 
+	// struct for passing in necessary args to threadfunc
+	struct ThreadArgs* args = (struct ThreadArgs*) malloc(sizeof(struct ThreadArgs));
+	args->m_list = list;
+	args->m_elements = elements;
+	args->n = nelements;
+
 	for (int i = 0; i < nthreads; i++) {
 		// TODO: threadfunc args? list head, elements to insert, iterations, .....
-		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, "FIGURE OUT LATER");
+		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)args);
 		if (pthread_ret != 0) {
 			fprintf(stderr, "Error creating threads\n");
 			exit_status = 1;
