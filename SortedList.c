@@ -160,7 +160,7 @@ int SortedList_length(SortedList_t *list) {
   return counter;
 }
 
-int main() {
+int main1() {
   SortedList_t *head;
   head = malloc(sizeof(SortedListElement_t));
   char*val = "test";
