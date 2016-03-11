@@ -73,6 +73,8 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	// malloc list array
 	list = malloc(sizeof(SortedList_t));
 	list->key = NULL;
+	list->next = list;
+	list->prev = list;
 
 	// create and initialize (threads x iterations) list elements
 	long nelements = nthreads * niter;
