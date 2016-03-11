@@ -22,8 +22,23 @@ int opt_yield;
 
 void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
  	SortedListElement_t* cur = list->next;
+	
+	while(cur != list) {
+	  if(strcmp(element->key, cur->key) <= 0) {
+	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
+	    break;
+	  }
+	  cur = cur->next;
+	}
 
-	//base case empty
+	//at this point, element->key is less than cur->key.
+	element->prev = cur->prev;
+	element->next = cur;
+	element->prev->next = element;
+	element->next->prev = element;
+
+
+	/*	//base case empty
 	if(cur == NULL) {
 	  list->next = element;
 	  element->prev = list;
@@ -59,7 +74,7 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
      	element->prev = cur->next->prev;
 	element->next = cur->next;
 	element->prev->next = element;
-	element->next->prev = element;	
+	element->next->prev = element;	*/
 }
 
 
@@ -83,21 +98,28 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 int SortedList_delete(SortedListElement_t *element) {
 	if (element->next->prev != element || element->prev->next != element) {
 		// make sure next-prev and prev-next both point to this node
+	        fprintf(stderr, "Error in delete\n");
 		return -1;
 	}
+	/*
 	// last element
 	if (element->next == NULL) {
 		element->prev = NULL;
 	}
-	// middle element
-	else {
-		element->prev->next = element->next;
-		if (opt_yield & DELETE_YIELD)
+	*/	
+
+        //able to delete
+	element->prev->next = element->next;
+	element->next->prev = element->prev;
+
+	/*
+	element->prev->next = element->next;
+	if (opt_yield & DELETE_YIELD)
 			pthread_yield();
 		element->next->prev = element->prev;
 		element->next = NULL;
 		element->prev = NULL;
-	}
+		}*/
 	return 0;
 }
 
@@ -118,7 +140,7 @@ int SortedList_delete(SortedListElement_t *element) {
  */
 SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
   SortedListElement_t* cur = list->next;
-  while(cur != NULL) {
+  while(cur != list) {
     if(strcmp(cur->key,key) == 0) {
       if(opt_yield & SEARCH_YIELD) {
 	pthread_yield();
@@ -151,7 +173,7 @@ int SortedList_length(SortedList_t *list) {
   if(opt_yield & SEARCH_YIELD) {
     pthread_yield();
   }
-  while(cur != NULL) {
+  while(cur != list) {
     fprintf(stderr, "Key: %s\n", cur->key);
     cur = cur->next;
     counter++;
@@ -160,72 +182,84 @@ int SortedList_length(SortedList_t *list) {
   return counter;
 }
 
-int main1() {
+int main() {
   SortedList_t *head;
   head = malloc(sizeof(SortedListElement_t));
   char*val = "test";
-  head->next = NULL;
+  head->next = head;
+  head->prev = head;
 
   SortedListElement_t *node1 = malloc(sizeof(SortedListElement_t));
   char* val1 = "100";
   node1->key = val1;
   node1->next = NULL;
+  node1->prev = NULL;
 
   SortedListElement_t *node2 = malloc(sizeof(SortedListElement_t));
   char*val2 = "10000";
   node2->key = val2;
   node2->next = NULL;
+  node2->prev = NULL;
 
   SortedListElement_t *node3 = malloc(sizeof(SortedListElement_t));
   char* val3 = "10";
   node3->key = val3;
   node3->next = NULL;
+  node3->prev = NULL;
 
   SortedListElement_t *node4 = malloc(sizeof(SortedListElement_t));
   char* val4 = "1";
   node4->key = val4;
   node4->next = NULL;
+  node4->prev = NULL;
 
   SortedListElement_t *node5 = malloc(sizeof(SortedListElement_t));
   char* val5 = "1000";
   node5->key = val5;
   node5->next = NULL;
+  node5->prev = NULL;
 
   SortedListElement_t *node6 = malloc(sizeof(SortedListElement_t));
   char* val6 = "188";
   node6->key = val6;
   node6->next = NULL;
+  node6->prev = NULL;
 
   SortedListElement_t *node7 = malloc(sizeof(SortedListElement_t));
   char* val7 = "11";
   node7->key = val7;
   node7->next = NULL;
-  
+  node7->prev = NULL;
+
   fprintf(stderr, "start insert\n");
   SortedList_insert(head, node1);
   SortedList_insert(head, node2);
   SortedList_insert(head, node3);
   SortedList_insert(head, node4);
-    SortedList_insert(head, node5);
-   SortedList_insert(head, node6);
-   SortedList_insert(head, node7);
-  //  SortedList_length(head);
+  SortedList_insert(head, node5);
+  SortedList_insert(head, node6);
+  SortedList_insert(head, node7);
+
+  SortedList_delete(node4);
+  SortedList_delete(node6);
+  SortedList_delete(node5);
+  SortedList_length(head);
   SortedListElement_t *itr = head->next;
-  while(itr != NULL) {
+  while(itr != head) {
     fprintf(stderr, "Iteration test: %s\n", itr->key);
     itr = itr->next;
   }
   itr = head->next;
-  while(itr->next != NULL) {
+  while(itr->next != head) {
     itr = itr->next;
   }
   while(itr != head) {
     fprintf(stderr,"Backwards: %s\n", itr->key);
     itr = itr->prev;
   }
-  /*  SortedList_lookup(head, val1);
+  SortedList_lookup(head, val1);
   SortedList_lookup(head, val2);
   SortedList_lookup(head, val3);
-  SortedList_lookup(head, val4);*/
+  SortedList_lookup(head, val4);
   return 0;
 }
