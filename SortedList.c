@@ -121,14 +121,14 @@ SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
   while(cur != NULL) {
     if(strcmp(cur->key,key) == 0) {
       if(opt_yield & SEARCH_YIELD) {
-	pthread_yield();
+		pthread_yield();
       }
-      fprintf(stderr, "Found: %s\n", cur->key);
+      //fprintf(stderr, "Found: %s\n", cur->key);
       return cur;
     }
     cur = cur->next;
   }
-  fprintf(stderr, "Not found\n");
+  //fprintf(stderr, "Not found\n");
   return NULL;
 }
 
@@ -152,11 +152,9 @@ int SortedList_length(SortedList_t *list) {
     pthread_yield();
   }
   while(cur != NULL) {
-    fprintf(stderr, "Key: %s\n", cur->key);
     cur = cur->next;
     counter++;
   }
-  fprintf(stderr, "Length: %d\n", counter);
   return counter;
 }
 
@@ -201,18 +199,18 @@ int main1() {
   node7->key = val7;
   node7->next = NULL;
   
-  fprintf(stderr, "start insert\n");
+  //fprintf(stderr, "start insert\n");
   SortedList_insert(head, node1);
   SortedList_insert(head, node2);
   SortedList_insert(head, node3);
   SortedList_insert(head, node4);
-    SortedList_insert(head, node5);
-   SortedList_insert(head, node6);
-   SortedList_insert(head, node7);
+  SortedList_insert(head, node5);
+  SortedList_insert(head, node6);
+  SortedList_insert(head, node7);
   //  SortedList_length(head);
   SortedListElement_t *itr = head->next;
   while(itr != NULL) {
-    fprintf(stderr, "Iteration test: %s\n", itr->key);
+    //fprintf(stderr, "Iteration test: %s\n", itr->key);
     itr = itr->next;
   }
   itr = head->next;
@@ -220,7 +218,7 @@ int main1() {
     itr = itr->next;
   }
   while(itr != head) {
-    fprintf(stderr,"Backwards: %s\n", itr->key);
+    //fprintf(stderr,"Backwards: %s\n", itr->key);
     itr = itr->prev;
   }
   /*  SortedList_lookup(head, val1);

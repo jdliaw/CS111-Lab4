@@ -9,8 +9,14 @@ default:
 addtest: addtest.c
 	$(CC) $(CFLAGS) addtest.c -o $@
 
+SortedList: SortedList.c SortedList.h
+	$(CC) -c SortedList.c 
+	# generates object file SortedList.o
+	# gcc SortedList.o sltest.o -o sltest 
+	# generates executable
+
 sltest: sltest.c
-	$(CC) $(CFLAGS) sltest.c -o $@
+	$(CC) $(CFLAGS) SortedList.o sltest.c -o $@
 
 check:
 
