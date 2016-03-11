@@ -1,6 +1,7 @@
 #include "SortedList.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // struct SortedListElement {
 // 	struct SortedListElement *prev;
@@ -29,13 +30,15 @@
 void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 	SortedListElement_t* cur = list;
 
-	while (cur->next != NULL && cur->key < element->key) {
+	while (cur->next != NULL && strcmp(cur->key,element->key) <= 0) {
 		// find where it belongs in SortedList
 		cur = cur->next;
 	}
 	if (cur->next == NULL) {
 		// insert at tail of list
 		cur->next = element;
+		if (opt_yield & INSERT_YIELD)
+			pthread_yield();
 		element->prev = cur;
 		element->next = NULL;
 	}
@@ -44,6 +47,8 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 		SortedListElement_t* temp = cur->next;
 		cur->next = element;
 		element->prev = cur;
+		if (opt_yield & INSERT_YIELD)
+			pthread_yield();
 		element->next = temp;
 		temp->prev = element;
 	}
@@ -69,19 +74,26 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 int SortedList_delete(SortedListElement_t *element) {
 	if (element->next->prev != element || element->prev->next != element) {
 		// make sure next-prev and prev-next both point to this node
-		return;
+		return -1;
 	}
 	// last element
 	if (element->next == NULL) {
 		element->prev = NULL;
+		if (opt_yield & DELETE_YIELD)
+			pthread_yield();
+		element->prev->next = NULL;
 
 	}
 	// middle element
 	else {
 		element->prev->next = element->next;
+		if (opt_yield & DELETE_YIELD)
+			pthread_yield();
 		element->next->prev = element->prev;
+		element->next = NULL;
+		element->prev = NULL;
 	}
-
+	return 0;
 }
 
 
@@ -110,6 +122,18 @@ SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
   return NULL;
 }
 
+/**
+ * SortedList_length ... count elements in a sorted list
+ *	While enumeratign list, it checks all prev/next pointers
+ *
+ * @param SortedList_t *list ... header for the list
+ *
+ * @return int number of elements in list (excluding head)
+ *	   -1 if the list is corrupted
+ *
+ * Note: if (opt_yield & SEARCH_YIELD)
+ *		call pthread_yield in middle of critical section
+ */
 int SortedList_length(SortedList_t *list) {
   SortedListElement_t* cur = list;
   int counter = 0;
