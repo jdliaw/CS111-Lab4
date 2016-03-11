@@ -20,7 +20,8 @@ void* threadfunc(void* arg) {
 	int len = length(list);
 
 	// look up each of keys inserted & delete each returned element
-	SortedListElement_t* element;
+	SortedListElement_t* element = malloc(sizeof(SortedListElement_t));
+	
 	for (int i = 0; i < nelements; i++) {
 		element = lookup(list, &keys[i]);
 		delete(element);
