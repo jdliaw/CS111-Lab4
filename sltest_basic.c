@@ -200,72 +200,72 @@ int main(int argc, char **argv) {
 	      	/* sync option
 	      		m = mutex
 	      		s = spinlock s*/
-	      	case 's':
-	      		if (optarg) {
-	      			sync = *optarg;
-	      		}
-	      		else {
-	      			fprintf(stderr, "Invalid sync option\n");
-	      			exit(1);
-	      		}
-	      		// set sync flags accordingly
-	      		switch(sync) {
-	      			case 'm':
-	      				mutex = 1;
-	      				break;
-					case 's':
-	      				spin = 1;
-	      				break;
-	      			default:
-	      				break;
-	      		}
-	      		break;
+	    //   	case 's':
+	    //   		if (optarg) {
+	    //   			sync = *optarg;
+	    //   		}
+	    //   		else {
+	    //   			fprintf(stderr, "Invalid sync option\n");
+	    //   			exit(1);
+	    //   		}
+	    //   		// set sync flags accordingly
+	    //   		switch(sync) {
+	    //   			case 'm':
+	    //   				mutex = 1;
+	    //   				break;
+					// case 's':
+	    //   				spin = 1;
+	    //   				break;
+	    //   			default:
+	    //   				break;
+	    //   		}
+	    //   		break;
 	      	/* yield option 
 	      		i = insert
 	      		d = delete
 	      		s = search */
-	      	case 'y':
-	      		if (optarg) {
-	      			// TODO: opt_yield a char or int????? (see flags)
-	      			yield = optarg;
-	      		}
-	      		else {
-	      			fprintf(stderr, "Invalid yield option\n");
-	      			exit(1);
-	      		}
+	      	// case 'y':
+	      	// 	if (optarg) {
+	      	// 		// TODO: opt_yield a char or int????? (see flags)
+	      	// 		yield = optarg;
+	      	// 	}
+	      	// 	else {
+	      	// 		fprintf(stderr, "Invalid yield option\n");
+	      	// 		exit(1);
+	      	// 	}
 	      		// get correct opt_yield flags
 	      		/* including yield=i
 								  =d
 								  =is
 								  =ds
 					etc. */		
-	      		int i = 0;
-	      		int run = 1;
-	      		while (run) {
-	      			switch(yield[i]) {
-	      				case 'i':
-	      					opt_yield |= INSERT_YIELD; // opt_yield should be an int bc insert_yield is int
-	      					break;
-	      				case 'd':
-	      					opt_yield |= DELETE_YIELD;
-	      					break;
-	      				case 's':
-	      					opt_yield |= SEARCH_YIELD;
-	      					break;
-	      				default:
-	      					run = 0;
-	      					break;
-	      			}
-	      			i++;
-	      		}
-	      		break;
-	      	case 'l':
-	      		if (optarg) {
-	      			nlists = atoi(optarg);
-	      		}
-	      		else {
-	      			nlists = 1;
-	      		}
+	      	// 	int i = 0;
+	      	// 	int run = 1;
+	      	// 	while (run) {
+	      	// 		switch(yield[i]) {
+	      	// 			case 'i':
+	      	// 				opt_yield |= INSERT_YIELD; // opt_yield should be an int bc insert_yield is int
+	      	// 				break;
+	      	// 			case 'd':
+	      	// 				opt_yield |= DELETE_YIELD;
+	      	// 				break;
+	      	// 			case 's':
+	      	// 				opt_yield |= SEARCH_YIELD;
+	      	// 				break;
+	      	// 			default:
+	      	// 				run = 0;
+	      	// 				break;
+	      	// 		}
+	      	// 		i++;
+	      	// 	}
+	      	// 	break;
+	      	// case 'l':
+	      	// 	if (optarg) {
+	      	// 		nlists = atoi(optarg);
+	      	// 	}
+	      	// 	else {
+	      	// 		nlists = 1;
+	      	// 	}
 	      	default: 
 	      		break;
 	  	}
