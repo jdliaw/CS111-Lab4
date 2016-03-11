@@ -149,9 +149,8 @@ void addtest(long long nthreads, long long niter) {
 	if (counter != 0) {
 		fprintf(stderr, "ERROR: final count = %lld\n", counter);
 		exit_status = 1;
-		return;
 	}
-	fprintf(stderr, "\n***TEST*** starttime: %lld, endtime: %lld\n\n", 1000000000*tp_start.tv_sec + tp_start.tv_nsec, 1000000000*tp_end.tv_sec + tp_end.tv_nsec);
+	
 	// print stuff to stdout
 	fprintf(stdout, "%lli threads x %lli iterations x (add + subtract) = %lli operations\n", nthreads, niter, noperations);
 	fprintf(stdout, "elapsed time: %lld ns\n", elapsed_time);
@@ -187,23 +186,19 @@ int main(int argc, char **argv) {
 	      	/* nthreads */ 
 	    	case 't':
 	    		if(optarg) {		//threads=<something>
-	    			nthreads = atoi(optarg);
-	    			fprintf(stderr, "threads=%lu\n", nthreads);
+	    			nthreads = atoi(optarg);	       
 	    		}
 	    		else {
 	    			nthreads = 1;	//default 1
-	    			fprintf(stderr, "threads=%lu\n", nthreads);
 	    		}
 		      	break;
 	      	/* niterations */
 	      	case 'i':
 				if(optarg) {
 					iterations = atoi(optarg);
-					fprintf(stderr, "iter=%lu\n", iterations);
 				}
 				else {
 					iterations = 1;
-					fprintf(stderr, "iter=%lu\n", iterations);
 				}
 	      		break;
 	      	/* sync option
@@ -212,8 +207,7 @@ int main(int argc, char **argv) {
 	      		c = compare and swap */
 	      	case 's':
 	      		if (optarg) {
-	      			sync = *optarg;
-	      			fprintf(stderr, "sync=%c\n", sync);
+	      			sync = *optarg; //sdfslfdslflsd
 	      		}
 	      		else {
 	      			fprintf(stderr, "Invalid sync option\n");
@@ -224,11 +218,9 @@ int main(int argc, char **argv) {
 	      	case 'y':
 	      		if (optarg) {
 	      			opt_yield = atoi(optarg);
-	      			fprintf(stderr, "yield=%d\n", opt_yield);
 	      		}
 	      		else {
 	      			opt_yield = 1;
-	      			fprintf(stderr, "yield=%d\n", opt_yield);
 	      		}
 	      		break;
 	      	default: 

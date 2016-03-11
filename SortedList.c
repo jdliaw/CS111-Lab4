@@ -1,4 +1,3 @@
-
 #include "SortedList.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +25,7 @@
  * Note: if (opt_yield & INSERT_YIELD)
  *		call pthread_yield in middle of critical section
  */
+
 void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 	SortedListElement_t* cur = list;
 
@@ -84,10 +84,42 @@ int SortedList_delete(SortedListElement_t *element) {
 
 }
 
-SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
 
+/**
+ * SortedList_lookup ... search sorted list for a key
+ *
+ *The specified list will be searched for an
+ *element with the specified key.
+ *
+ * @param SortedList_t *list ... header for the list
+ * @param const char * key ... the desired key
+ *
+ * @return pointer to matching element, or NULL if none is found
+ *
+ * Note: if (opt_yield & SEARCH_YIELD)
+ *call pthread_yield in middle of critical section
+ */
+SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
+  SortedListElement_t* cur = list;
+  while(cur != NULL) {
+    if(cur->key == key) {
+      return cur;
+    }
+    cur = cur->next;
+  }
+  return NULL;
 }
 
 int SortedList_length(SortedList_t *list) {
+  SortedListElement_t* cur = list;
+  int counter = 0;
+  while(cur != NULL) {
+    cur = cur->next;
+    counter++;
+  }
+  return counter;
+}
 
+int main() {
+  return 0;
 }
