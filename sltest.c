@@ -9,7 +9,7 @@
 
 // global vars
 char sync;
-int opt_yield = 0;
+char* opt_yield;
 int nlists = 0;
 int mutex = 0;
 int spin = 0;
@@ -309,7 +309,7 @@ int main(int argc, char **argv) {
 	      			case 'm':
 	      				mutex = 1;
 	      				break;
-	      			case 's'
+			case 's':
 	      				spin = 1;
 	      				break;
 	      			default:
@@ -338,7 +338,7 @@ int main(int argc, char **argv) {
 	      		int i = 0;
 	      		int run = 1;
 	      		while (run) {
-	      			switch(yield[i]) {
+	      			switch(opt_yield[i]) {
 	      				case 'i':
 	      					opt_yield |= INSERT_YIELD;
 	      					break;
