@@ -1,5 +1,5 @@
 
-#include <SortedList.h>
+#include "SortedList.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -66,7 +66,21 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
  *		call pthread_yield in middle of critical section
  */
 
-int SortedList_delete( SortedListElement_t *element) {
+int SortedList_delete(SortedListElement_t *element) {
+	if (element->next->prev != element || element->prev->next != element) {
+		// make sure next-prev and prev-next both point to this node
+		return;
+	}
+	// last element
+	if (element->next == NULL) {
+		element->prev = NULL;
+
+	}
+	// middle element
+	else {
+		element->prev->next = element->next;
+		element->next->prev = element->prev;
+	}
 
 }
 
