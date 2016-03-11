@@ -66,7 +66,21 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
  *		call pthread_yield in middle of critical section
  */
 
-int SortedList_delete( SortedListElement_t *element) {
+int SortedList_delete(SortedListElement_t *element) {
+	if (element->next->prev != element || element->prev->next != element) {
+		// make sure next-prev and prev-next both point to this node
+		return;
+	}
+	// last element
+	if (element->next == NULL) {
+		element->prev = NULL;
+
+	}
+	// middle element
+	else {
+		element->prev->next = element->next;
+		element->next->prev = element->prev;
+	}
 
 }
 
@@ -86,9 +100,12 @@ int SortedList_delete( SortedListElement_t *element) {
  *call pthread_yield in middle of critical section
  */
 SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
-  SortedListElement_t* cur = list;
+  SortedListElement_t* cur = list->next;
   while(cur != NULL) {
-    if(cur->key == key) {
+    if(strcmp(cur->key,key) == 0) {
+      if(opt_yield & SEARCH_YIELD) {
+	pthread_yield();
+      }
       return cur;
     }
     cur = cur->next;
@@ -97,8 +114,12 @@ SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
 }
 
 int SortedList_length(SortedList_t *list) {
-  SortedListElement_t* cur = list;
+  SortedListElement_t* cur = list->next;
   int counter = 0;
+
+  if(opt_yield & SEARCH_YIELD) {
+    pthread_yield();
+  }
   while(cur != NULL) {
     cur = cur->next;
     counter++;
@@ -107,5 +128,5 @@ int SortedList_length(SortedList_t *list) {
 }
 
 int main() {
-  return 0;
+
 }
