@@ -1,0 +1,39 @@
+1.1
+1.
+If the number of threads are small, there is less likelyhood of them stepping over each other.
+Likewise, if there are not many iterations, there are fewer chances for threads to collide each other.
+
+2.
+If there are a significantly small number of iterations, then threads are again less likely to step over each other.
+Although not reliable, if there are say, 2 iterations, there's a better chance that when threads collide the effects could canc
+el out around 0.
+
+
+1.2
+1. There is overhead associated with creating threads and calling functions. If there are a lot of iterations, the majority of 
+time is spent on each iteration, which has no overhead. Thus, the ratio of time spent on iterations vs overhead for thread/func
+tion calls increases, and the cost per operation decreases.
+
+2. The "correct cost" could be obtained by only grabbing the time it takes for running the operations, without the thread overh
+ead. It would be the total cost that we have now minus the overhead of creating threads. This could be done by just measuring t
+ime taken for creating threads and then subtracting from total time.
+
+3. --yield runs are so much slower because of context switches. Every time a thread yields, it has to stop what it's doing, swi
+tch to another thread, and that thread can continue. Each context switch has some overhead to create threads and start them up.
+
+4. With threads, it is possible to time how long it takes to create a thread simply by placing timers before the thread creatio
+n and after it. For yield, it is much harder to track context switches because not only are threads being switched to, but we d
+on't know which thread we switch to. For this reason, we can't get valid timings for --yield.
+
+
+1.3
+1. For low numbers of threads, there isn't much issue with obtaining locks. If there are a lot of threads, they each have to ob
+tain a lock, and if they cannot, they have to wait. The more threads there are, the more waiting there is. Fewer threads means 
+less waiting.
+
+2. Similar to question 1.3.1, with locks, threads cannot all operate on the same time. For mutex, if a lock is acquired, then o
+ther threads cannot operate on the same variable. For spinlocks, it's the same as mutex. Lastly, for compare and swap, if there
+ are a lot of threads operating, the compare and swap will fail many times.
+
+3. Spin-locks are so expensive for large number of threads because only one thread can operate at a time, so many threads will 
+not be able to operate. When they are unable to acquire a lock, they will just chew up CPU as they spin.
