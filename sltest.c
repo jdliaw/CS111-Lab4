@@ -177,11 +177,14 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		exit_status = 1;
 	}
 
+	char* p = keys;
 	// generate array of random keys
 	for (int i = 0; i < nelements; i++) {
 		int len = rand() % 15; // generate a random size for each key
-		keys + i = (char*) malloc(sizeof(char*) * len);
-		if (&keys[i] == NULL) {
+		p = p+i;
+		p = malloc(sizeof(char*) * len);
+		//(keys + i) = (char*) malloc(sizeof(char*) * len);
+		if (p == NULL) {
 			fprintf(stderr, "Error allocating memory for key\n");
 			exit_status = 1;
 		}
