@@ -33,25 +33,37 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 
 // need different implementation for insert, lenth, and lookup/delete
 void* threadfunc(void* arg) {
+	fprintf(stderr, "Entered threadfunc\n");
 	long long nelements = (long long) arg;
-
-	// keep track of keys inserted
-	keys = malloc(nelements * sizeof(char*));
+	fprintf(stderr, "nelements = %llu\n", nelements);
 
 	// insert elements into the list
 	for (int i = 0; i < nelements; i++) {
+		fprintf(stderr, "Inserting element with key %c\n", elements[i].key);
 		SortedList_insert(list, &elements[i]);
 	}
 
 	// get list length
 	int len = SortedList_length(list);
+	fprintf(stderr, "len = %d\n", len);
 
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
 
 	for (int i = 0; i < nelements; i++) {
 		target = SortedList_lookup(list, &keys[i]);
-		SortedList_delete(target);
+		if (target == NULL) {
+			fprintf(stderr, "Target not found\n");
+			// TODO: error handling
+		}
+		else
+			fprintf(stderr, "Target key: %c\n", target->key);
+		
+		int ret = SortedList_delete(target);
+		if (delete != 0) {
+			fprintf(stderr, "Failed to delete target from SortedList\n");
+			// TODO: error handling
+		}
 	}
 }
 
@@ -128,6 +140,8 @@ void sltest(long nthreads, long niter, char opt_yield) {
 			fprintf(stderr, "Error creating threads\n");
 			exit_status = 1;
 		}
+		else
+			fprintf(stderr, "Success creating thread %d\n", i);
 	}
 
 	// wait for all threads to complete
