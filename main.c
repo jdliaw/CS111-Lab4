@@ -18,7 +18,7 @@ char sync;
 
 struct Threadargs {
 	long long counter;
-	long iterations;
+	long long iterations;
 };
 
 void add(long long *pointer, long long value) {
@@ -62,8 +62,8 @@ void cadd(long long *pointer, long long value) {
 
 /* thread function */
 void* threadfunc(void* arg) {
-	long iterations = (long)arg;
-	long i;
+	long long iterations = (long long)arg;
+	long long i;
 	if (sync == 'm') {
 		for (i = 0; i < iterations; i++) {
 			madd(&counter, 1);
@@ -98,19 +98,18 @@ void* threadfunc(void* arg) {
 	}
 }
 
-void addtest(long nthreads, long niter) {
+void addtest(long long nthreads, long long niter) {
 	int exit_status = 0;
 	counter = 0;
-	struct timespec tp;  /* time_t tv_sec; // whole secs >= 0
+	struct timespec tp_start;  /* time_t tv_sec; // whole secs >= 0
 							long tv_nsec; // nanoseconds */
-	int clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp);
+	struct timespec tp_end;
+	int clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp_start);
 	if (clock_ret != 0) {
 	  fprintf(stderr, "Error in clock_gettime()\n");
 	  exit_status = 1;
 	}
 
-	long start_time = tp.tv_nsec; // want "high resolution" aka in ns
-	fprintf(stderr, "start_time: %lu\n", start_time);
 
 	//malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
@@ -136,11 +135,15 @@ void addtest(long nthreads, long niter) {
 	}
 
 	// get ending time for run
-	clock_gettime(CLOCK_MONOTONIC, &tp);
-	long end_time = tp.tv_nsec;
-	long elapsed_time = end_time - start_time;
-	long noperations = nthreads * niter * 2;
-	long average_time = elapsed_time / noperations;
+	clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp_end);
+	if(clock_ret != 0) {
+	  fprintf(stderr, "clockret error");
+	  exit_status = 1;
+	}
+
+	long long elapsed_time = 1000000000 * (tp_end.tv_sec - tp_start.tv_sec) + tp_end.tv_nsec - tp_start.tv_nsec;
+	long long noperations = nthreads * niter * 2;
+	long long average_time = elapsed_time / noperations;
 
 	// error message if counter not zero
 	if (counter != 0) {
@@ -148,19 +151,19 @@ void addtest(long nthreads, long niter) {
 		exit_status = 1;
 		return;
 	}
-
+	fprintf(stderr, "\n***TEST*** starttime: %lld, endtime: %lld\n\n", 1000000000*tp_start.tv_sec + tp_start.tv_nsec, 1000000000*tp_end.tv_sec + tp_end.tv_nsec);
 	// print stuff to stdout
-	fprintf(stdout, "%lu threads x %lu iterations x (add + subtract) = %lu operations\n", nthreads, niter, noperations);
-	fprintf(stdout, "elapsed time: %lu ns\n", elapsed_time);
-	fprintf(stdout, "per operation: %lu ns\n", average_time);
+	fprintf(stdout, "%lli threads x %lli iterations x (add + subtract) = %lli operations\n", nthreads, niter, noperations);
+	fprintf(stdout, "elapsed time: %lld ns\n", elapsed_time);
+	fprintf(stdout, "per operation: %lld ns\n", average_time);
 
 	// exit non-zero status if errors, exit 0 if no errors.
 	exit(exit_status);
 }
 
 int main(int argc, char **argv) {
-	long nthreads = 0;
-	long iterations = 0;
+	long long nthreads = 0;
+	long long iterations = 0;
 
 	while (1) {
 	    static struct option long_options[] =
