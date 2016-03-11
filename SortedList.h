@@ -30,7 +30,23 @@ typedef struct SortedListElement SortedListElement_t;
  * Note: if (opt_yield & INSERT_YIELD)
  *		call pthread_yield in middle of critical section
  */
-void SortedList_insert(SortedList_t *list, SortedListElement_t *element);
+void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
+	SortedListElement_t* cur = list->next;
+	
+	while(cur != list) {
+	  if(strcmp(element->key, cur->key) <= 0) {
+	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
+	    break;
+	  }
+	  cur = cur->next;
+	}
+
+	//at this point, element->key is less than cur->key.
+	element->prev = cur->prev;
+	element->next = cur;
+	element->prev->next = element;
+	element->next->prev = element;
+}
 
 /**
  * SortedList_delete ... remove an element from a sorted list
@@ -48,7 +64,19 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element);
  * Note: if (opt_yield & DELETE_YIELD)
  *		call pthread_yield in middle of critical section
  */
-int SortedList_delete( SortedListElement_t *element);
+int SortedList_delete( SortedListElement_t *element) {
+	if (element->next->prev != element || element->prev->next != element) {
+		// make sure next-prev and prev-next both point to this node
+	        fprintf(stderr, "Error in delete\n");
+		return -1;
+	}
+
+    //able to delete
+	element->prev->next = element->next;
+	element->next->prev = element->prev;
+
+	return 0;
+}
 
 /**
  * SortedList_lookup ... search sorted list for a key
@@ -64,7 +92,19 @@ int SortedList_delete( SortedListElement_t *element);
  * Note: if (opt_yield & SEARCH_YIELD)
  *		call pthread_yield in middle of critical section
  */
-SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key);
+SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
+	SortedListElement_t* cur = list->next;
+  	while(cur != list) {
+	    if(strcmp(cur->key,key) == 0) {
+	      	if(opt_yield & SEARCH_YIELD) {
+				pthread_yield();
+	      	}
+	      	return cur;
+	    }
+	    cur = cur->next;
+	 }
+  	return NULL;
+}
 
 /**
  * SortedList_length ... count elements in a sorted list
@@ -78,7 +118,21 @@ SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key);
  * Note: if (opt_yield & SEARCH_YIELD)
  *		call pthread_yield in middle of critical section
  */
-int SortedList_length(SortedList_t *list);
+int SortedList_length(SortedList_t *list) {
+	SortedListElement_t* cur = list->next;
+  	int counter = 0;
+
+  	if(opt_yield & SEARCH_YIELD) {
+   	 	pthread_yield();
+  	}
+
+  	while(cur != list) {
+    	fprintf(stderr, "Key: %s\n", cur->key);
+    	cur = cur->next;
+    	counter++;
+  	}
+  	return counter;
+}
 
 /**
  * variable to enable diagnositc calls to pthread_yield
