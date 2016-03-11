@@ -16,6 +16,21 @@ SortedList_t* list = NULL;
 SortedListElement_t* elements = NULL;
 char* keys = NULL;
 
+// generate random key of length len
+void random_key(char* s, int len) { // TODO: s as pointer is ok?
+	// all possible chars
+	static const char alpha[] = "0123456789"
+		"abcdefghijklmnopqrstuvwxyz"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	// randomly choose one of possible char for each char in s
+	for (int i = 0; i < len; i++) {
+		s[i] = alpha[rand() % (sizeof(alpha)-1)];
+	}
+
+	s[len] = 0; //terminate with nullbyte
+}
+
 // need different implementation for insert, lenth, and lookup/delete
 void* threadfunc(void* arg) {
 	long long nelements = (long long) arg;
@@ -44,8 +59,8 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	int exit_status = 0;
 
 	// malloc list array
-	list = malloc(sizeof(SortedList_t) * nlists);
-	list.key = NULL;
+	list = malloc(sizeof(SortedList_t));
+	list->key = NULL;
 
 	// create and initialize (threads x iterations) list elements
 	long nelements = nthreads * niter;
@@ -195,7 +210,7 @@ int main(int argc, char **argv) {
 				else {
 					iterations = 1;
 				}
-				fprintf(stderr, "Iterations: %lu\n", niter);
+				fprintf(stderr, "Iterations: %lu\n", iterations);
 	      		break;
 	      	/* sync option
 	      		m = mutex
