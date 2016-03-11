@@ -43,7 +43,7 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 	
 	while(cur != list) {
 	  if(strcmp(element->key, cur->key) <= 0) {
-	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
+	    //	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
 	    break;
 	  }
 	  cur = cur->next;

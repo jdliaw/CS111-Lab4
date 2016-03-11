@@ -39,7 +39,7 @@ void* threadfunc(void* arg) {
 
 	// insert elements into the list
 	for (int i = 0; i < nelements; i++) {
-		fprintf(stderr, "Inserting element with key %c\n", elements[i].key);
+	  fprintf(stderr, "Inserting element with key %c\n", (*elements[i].key));
 		SortedList_insert(list, &elements[i]);
 	}
 
