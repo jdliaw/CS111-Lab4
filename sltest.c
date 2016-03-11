@@ -5,11 +5,12 @@
 #include <time.h>
 #include <pthread.h>
 #include <math.h>
+#include <string.h>
 #include "SortedList.h"
 
 // global vars
 char sync;
-char* opt_yield;
+int opt_yield;
 int nlists = 0;
 int mutex = 0;
 int spin = 0;
@@ -51,7 +52,7 @@ void* threadfunc(void* arg) {
 	long long nelements = (long long) arg;
 
 	// keep track of keys inserted
-	const char* keys = malloc(nelements * sizeof(char*));
+	keys = malloc(nelements * sizeof(char*));
 
 	// insert elements into the list
 	for (int i = 0; i < nelements; i++) {
@@ -179,17 +180,17 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	// generate array of random keys
 	for (int i = 0; i < nelements; i++) {
 		int len = rand() % 15; // generate a random size for each key
-		keys[i] = malloc(sizeof(char*) * len);
-		if (keys[i] == NULL) {
+		&keys[i] = (char*) malloc(sizeof(char*) * len);
+		if (&keys[i] == NULL) {
 			fprintf(stderr, "Error allocating memory for key\n");
 			exit_status = 1;
 		}
-		random_key(keys[i], len);
+		random_key(&keys[i], len);
 	}
 
 	// initialize elements with random keys
 	for (int i = 0; i < nelements; i++) {
-		elements[i].key = keys[i];
+		elements[i].key = &keys[i];
 		elements[i].next = NULL;
 		elements[i].prev = NULL;
 	}
@@ -232,7 +233,7 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	}
 
 	// check length of list to confirm that it is zero
-	int len = SortedList_Length(list);
+	int len = SortedList_length(list);
 	if (len != 0) {
 		fprintf(stderr, "ERROR: final length = %lld\n", len);
 		exit_status = 1;
@@ -309,7 +310,7 @@ int main(int argc, char **argv) {
 	      			case 'm':
 	      				mutex = 1;
 	      				break;
-			case 's':
+					case 's':
 	      				spin = 1;
 	      				break;
 	      			default:
@@ -323,7 +324,7 @@ int main(int argc, char **argv) {
 	      	case 'y':
 	      		if (optarg) {
 	      			// TODO: opt_yield a char or int????? (see flags)
-	      			opt_yield = *optarg;
+	      			char* yield = *optarg;
 	      		}
 	      		else {
 	      			fprintf(stderr, "Invalid yield option\n");
@@ -338,9 +339,9 @@ int main(int argc, char **argv) {
 	      		int i = 0;
 	      		int run = 1;
 	      		while (run) {
-	      			switch(opt_yield[i]) {
+	      			switch(yield[i]) {
 	      				case 'i':
-	      					opt_yield |= INSERT_YIELD;
+	      					opt_yield |= INSERT_YIELD; // opt_yield should be an int bc insert_yield is int
 	      					break;
 	      				case 'd':
 	      					opt_yield |= DELETE_YIELD;
