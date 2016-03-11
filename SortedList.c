@@ -3,16 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// struct SortedListElement {
-// 	struct SortedListElement *prev;
-// 	struct SortedListElement *next;
-// 	const char *key;
-// };
-// typedef struct SortedListElement SortedList_t;
-// typedef struct SortedListElement SortedListElement_t;
-
-
-
 /**
  * SortedList_insert ... insert an element into a sorted list
  *
@@ -148,5 +138,5 @@ int SortedList_length(SortedList_t *list) {
 }
 
 int main() {
-
+	
 }
