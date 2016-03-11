@@ -180,7 +180,7 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	// generate array of random keys
 	for (int i = 0; i < nelements; i++) {
 		int len = rand() % 15; // generate a random size for each key
-		&keys[i] = (char*) malloc(sizeof(char*) * len);
+		keys + i = (char*) malloc(sizeof(char*) * len);
 		if (&keys[i] == NULL) {
 			fprintf(stderr, "Error allocating memory for key\n");
 			exit_status = 1;
@@ -255,6 +255,7 @@ void sltest(long nthreads, long niter, char opt_yield) {
 int main(int argc, char **argv) {
 	long long nthreads = 0;
 	long long iterations = 0;
+	char* yield;
 
 	while (1) {
 	    static struct option long_options[] =
@@ -324,7 +325,7 @@ int main(int argc, char **argv) {
 	      	case 'y':
 	      		if (optarg) {
 	      			// TODO: opt_yield a char or int????? (see flags)
-	      			char* yield = *optarg;
+	      			yield = optarg;
 	      		}
 	      		else {
 	      			fprintf(stderr, "Invalid yield option\n");
