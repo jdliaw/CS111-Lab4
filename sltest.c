@@ -10,7 +10,7 @@
 // global vars
 SortedList_t* list;
 SortedListElement_t* elements;
-const char* keys;
+char* keys;
 
 // generate random key of length len
 void random_key(char* s, int len) { // TODO: s as pointer is ok?
@@ -106,9 +106,9 @@ void sltest(long nthreads, long niter, char opt_yield) {
 
 	// initialize elements with random keys
 	for (int i = 0; i < nelements; i++) {
-		elements[i]->key = keys[i];
-		elements[i]->next = NULL;
-		elements[i]->prev = NULL;
+		elements[i].key = keys[i];
+		elements[i].next = NULL;
+		elements[i].prev = NULL;
 	}
 
 	// get start time
@@ -142,14 +142,14 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	}
 
 	// get end time
-	int clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp_end);
+	clock_ret = clock_gettime(CLOCK_MONOTONIC, &tp_end);
 	if (clock_ret != 0) {
 		fprintf(stderr, "Error getting end time\n");
 		exit_status = 1;
 	}
 
 	// check length of list to confirm that it is zero
-	int len = length(list)
+	int len = SortedList_Length(list);
 	if (len != 0) {
 		fprintf(stderr, "ERROR: final length = %lld\n", len);
 		exit_status = 1;
