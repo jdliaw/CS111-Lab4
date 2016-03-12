@@ -16,8 +16,13 @@ int exit_status = 0;
 
 SortedList_t* list = NULL;
 SortedListElement_t* elements = NULL;
-
 char** keys = NULL;
+
+// mutex global vars
+int mutex = 0;
+int spin = 0;
+static pthread_mutex_t lock;
+volatile int lock_s = 0;
 
 // generate random key of length len
 void random_key(char* s, int len) { // TODO: s as pointer is ok?
@@ -36,32 +41,84 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 }
 
 void* threadfunc(void* arg) {
-	fprintf(stderr, "Entered threadfunc\n");
 	int tid = (int) arg;
-	fprintf(stderr, "tid = %d\n", tid);
-	fprintf(stderr, "iterations = %llu\n", iterations);
-
 
 	// insert elements into the list
 	for (int i = 0; i < iterations; i++) {
-		SortedList_insert(list, &elements[(tid*iterations)+i]);
+		long long index = (tid*iterations) + i;
+		if (mutex) {
+			// use pthread_mutex
+			pthread_mutex_lock(&lock);
+			SortedList_insert(list, &elements[index]);
+			pthread_mutex_unlock(&lock);
+		}
+		else if (spin) {
+			// use test and set
+			while(__sync_lock_test_and_set(&lock_s, 1));
+			SortedList_insert(list, &elements[index]);
+			__sync_lock_release(&lock_s, 1);
+		}
+		else {
+			// unprotected
+			SortedList_insert(list, &elements[index]);
+		}
 	}
 
 	// get list length
-	int len = SortedList_length(list);
-	fprintf(stderr, "len = %d\n", len);
+	int len;
+	if (mutex) {
+		pthread_mutex_lock(&lock);
+		len = SortedList_length(list);
+		pthread_mutex_unlock(&lock);
+	}
+	else if (spin) {
+		while(__sync_lock_test_and_set(&lock_s, 1));
+		len = SortedList_length(list);
+		__sync_lock_release(&lock_s, 1);
+	}
+	else {
+		len = SortedList_length(list);
+	}
 
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
 
 	for (int i = 0; i < iterations; i++) {
-	  target = SortedList_lookup(list, keys[(tid*iterations)+i]);
+		long long index = (tid * iterations) + i;
+		if (mutex) {
+			pthread_mutex_lock(&lock);
+			target = SortedList_lookup(list, keys[index]);
+			pthread_mutex_unlock(&lock);
+		}
+		else if (spin) {
+			while(__sync_lock_test_and_set(&lock_s, 1));
+			target = SortedList_lookup(list, keys[index]);
+			__sync_lock_release(&lock_s, 1);
+		}
+		else {
+		  	target = SortedList_lookup(list, keys[index]);
+		}
+		// Error handling
 		if (target == NULL) {
 			fprintf(stderr, "Target not found\n");
 			exit_status = 1;
 		}
 
-		int ret = SortedList_delete(target);
+		int ret;
+		if (mutex) {
+			pthread_mutex_lock(&lock);
+			ret = SortedList_delete(target);
+			pthread_mutex_unlock(&lock);
+		}
+		else if (spin) {
+			while(__sync_lock_test_and_set(&lock_s, 1));
+			ret = SortedList_delete(target);
+			__sync_lock_release(&lock_s, 1);
+		}
+		else {
+			ret = SortedList_delete(target);
+		}
+		// Error handling
 		if (ret != 0) {
 			fprintf(stderr, "Failed to delete target %s from SortedList\n", target->key);
 			exit_status = 1;
