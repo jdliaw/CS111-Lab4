@@ -13,6 +13,7 @@ char sync;
 int opt_yield;
 long long iterations;
 int exit_status = 0;
+int nlists = 0;
 
 SortedList_t* list = NULL;
 SortedListElement_t* elements = NULL;
@@ -21,8 +22,24 @@ char** keys = NULL;
 // mutex global vars
 int mutex = 0;
 int spin = 0;
-static pthread_mutex_t lock;
-volatile int lock_s = 0;
+
+// array of mutexes / spinlocks
+pthread_mutex_t* mutex;
+static int* spinlock;
+// mutex/spinlock to lock length before locking stage
+static pthread_mutex_t lock; // for length
+volatile int lock_s = 0; // for length
+
+// determine which list to insert the key into (returns an index)
+int hash(const char*key) {
+	// hash = key % nlists
+	int n = 0;
+	int len = strlen(key);
+	for(int i = 0; i < len; i++) {
+	n += key[i];
+	}
+	return n % nlists;
+}
 
 // generate random key of length len
 void random_key(char* s, int len) { // TODO: s as pointer is ok?
@@ -46,21 +63,22 @@ void* threadfunc(void* arg) {
 	// insert elements into the list
 	for (int i = 0; i < iterations; i++) {
 		long long index = (tid*iterations) + i;
+		int list_index = hash(elements[index].key);
 		if (mutex) {
 			// use pthread_mutex
-		  pthread_mutex_lock(&lock);
-			SortedList_insert(list, &elements[index]);
-			pthread_mutex_unlock(&lock);
+		    pthread_mutex_lock(&mutex[list_index]);
+			SortedList_insert(&list[list_index], &elements[index]);
+			pthread_mutex_unlock(&mutex[list_index]);
 		}
 		else if (spin) {
 			// use test and set
-			while(__sync_lock_test_and_set(&lock_s, 1));
-			SortedList_insert(list, &elements[index]);
-			__sync_lock_release(&lock_s, 1);
+			while(__sync_lock_test_and_set(&spinlock[list_index], 1));
+			SortedList_insert(&list[list_index], &elements[index]);
+			__sync_lock_release(&spinlock[list_index], 1);
 		}
 		else {
 			// unprotected
-			SortedList_insert(list, &elements[index]);
+			SortedList_insert(&list[list_index], &elements[index]);
 		}
 	}
 
@@ -68,12 +86,21 @@ void* threadfunc(void* arg) {
 	int len;
 	if (mutex) {
 		pthread_mutex_lock(&lock);
-		len = SortedList_length(list);
+		// get length of each list
+		for (int i = 0; i < nlists; i++) {
+			pthread_mutex_lock(&mutex[i]);
+			len = SortedList_length(list);
+			pthread_mutex_unlock(&mutex[i]);
+		}
 		pthread_mutex_unlock(&lock);
 	}
 	else if (spin) {
 		while(__sync_lock_test_and_set(&lock_s, 1));
-		len = SortedList_length(list);
+		for (int i = 0; i < nlists; i++) {
+			while(__sync_lock_test_and_set(&spinlock[i], 1));
+			len = SortedList_length(list);
+			__sync_lock_release(&spinlock[i], 1);
+		}
 		__sync_lock_release(&lock_s, 1);
 	}
 	else {
@@ -86,20 +113,21 @@ void* threadfunc(void* arg) {
 
 	for (int i = 0; i < iterations; i++) {
 		long long index = (tid * iterations) + i;
+		int list_index= hash(elements[index].key);
 		if (mutex) {
-			pthread_mutex_lock(&lock);
-			target = SortedList_lookup(list, keys[index]);
+			pthread_mutex_lock(&mutex[list_index]);
+			target = SortedList_lookup(&list[list_index], keys[index]);
 			ret = SortedList_delete(target);
-			pthread_mutex_unlock(&lock);
+			pthread_mutex_unlock(&mutex[list_index]);
 		}
 		else if (spin) {
-			while(__sync_lock_test_and_set(&lock_s, 1));
-			target = SortedList_lookup(list, keys[index]);
+			while(__sync_lock_test_and_set(&spinlock[list_index], 1));
+			target = SortedList_lookup(&list[list_index], keys[index]);
 			ret = SortedList_delete(target);
-			__sync_lock_release(&lock_s, 1);
+			__sync_lock_release(&spinlock[list_index], 1);
 		}
 		else {
-		  	target = SortedList_lookup(list, keys[index]);
+		  	target = SortedList_lookup(&list[list_index], keys[index]);
 		  	ret = SortedList_delete(target);
 		}
 		// Error handling
@@ -118,10 +146,40 @@ void* threadfunc(void* arg) {
 
 void sltest(long nthreads, long niter, char opt_yield) {
 	// malloc list array
-	list = malloc(sizeof(SortedList_t));
+	list = malloc(sizeof(SortedList_t) * nlists);
+	if (list == NULL) {
+		fprintf(stderr, "Error allocating memory for lists\n");
+		exit_status = 1;
+	}
 	list->key = NULL;
 	list->next = list;
 	list->prev = list;
+
+	// initialize mutexes & spinlocks
+	if (mutex) {
+		pthread_mutex_init(&lock, NULL);
+		mutex = malloc(sizeof(pthread_mutex_t*) * nlists);
+		// Error handling
+		if (mutex == NULL) {
+			fprintf(stderr, "Error allocating memory for mutexes\n");
+			exit_status = 1;
+		}
+		for (int i = 0; i < nlists; i++) {
+			pthread_mutex_init(&mutex[i], NULL);
+		}
+	}
+	if (spin) {
+		lock_s = 0;
+		spinlock = malloc(sizeof(int*) * nlists);
+		// Error handling
+		if (spinlock == NULL) {
+			fprintf(stderr, "Error allocating memory for spinlocks\n");
+			exit_status = 1;
+		}
+		for (int i = 0; i < nlists; i++) {
+			spinlock[i] = 0;
+		}
+	}
 
 	// create and initialize (threads x iterations) list elements
 	long nelements = nthreads * niter;
@@ -287,48 +345,48 @@ int main(int argc, char **argv) {
 	      		i = insert
 	      		d = delete
 	      		s = search */
-	      	// case 'y':
-	      	// 	if (optarg) {
-	      	// 		// TODO: opt_yield a char or int????? (see flags)
-	      	// 		yield = optarg;
-	      	// 	}
-	      	// 	else {
-	      	// 		fprintf(stderr, "Invalid yield option\n");
-	      	// 		exit(1);
-	      	// 	}
+	      	case 'y':
+	      		if (optarg) {
+	      			// TODO: opt_yield a char or int????? (see flags)
+	      			yield = optarg;
+	      		}
+	      		else {
+	      			fprintf(stderr, "Invalid yield option\n");
+	      			exit(1);
+	      		}
 	      		// get correct opt_yield flags
 	      		/* including yield=i
 								  =d
 								  =is
 								  =ds
 					etc. */		
-	      	// 	int i = 0;
-	      	// 	int run = 1;
-	      	// 	while (run) {
-	      	// 		switch(yield[i]) {
-	      	// 			case 'i':
-	      	// 				opt_yield |= INSERT_YIELD; // opt_yield should be an int bc insert_yield is int
-	      	// 				break;
-	      	// 			case 'd':
-	      	// 				opt_yield |= DELETE_YIELD;
-	      	// 				break;
-	      	// 			case 's':
-	      	// 				opt_yield |= SEARCH_YIELD;
-	      	// 				break;
-	      	// 			default:
-	      	// 				run = 0;
-	      	// 				break;
-	      	// 		}
-	      	// 		i++;
-	      	// 	}
-	      	// 	break;
-	      	// case 'l':
-	      	// 	if (optarg) {
-	      	// 		nlists = atoi(optarg);
-	      	// 	}
-	      	// 	else {
-	      	// 		nlists = 1;
-	      	// 	}
+	      		int i = 0;
+	      		int run = 1;
+	      		while (run) {
+	      			switch(yield[i]) {
+	      				case 'i':
+	      					opt_yield |= INSERT_YIELD; // opt_yield should be an int bc insert_yield is int
+	      					break;
+	      				case 'd':
+	      					opt_yield |= DELETE_YIELD;
+	      					break;
+	      				case 's':
+	      					opt_yield |= SEARCH_YIELD;
+	      					break;
+	      				default:
+	      					run = 0;
+	      					break;
+	      			}
+	      			i++;
+	      		}
+	      		break;
+	      	case 'l':
+	      		if (optarg) {
+	      			nlists = atoi(optarg);
+	      		}
+	      		else {
+	      			nlists = 1;
+	      		}
 	      	default: 
 	      		break;
 	  	}

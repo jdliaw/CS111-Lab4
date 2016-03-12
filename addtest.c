@@ -110,8 +110,10 @@ void addtest(long long nthreads, long long niter) {
 	  exit_status = 1;
 	}
 
+	// initialize mutex
+	pthread_mutex_init(&lock, NULL);
 
-	//malloc threads
+	// malloc threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
 
 	// start threads
