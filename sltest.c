@@ -10,10 +10,10 @@
 
 // global vars
 char sync;
-int opt_yield;
+int opt_yield = 0;
 long long iterations;
 int exit_status = 0;
-int nlists = 0;
+int nlists = 1;
 
 SortedList_t* list = NULL;
 SortedListElement_t* elements = NULL;
