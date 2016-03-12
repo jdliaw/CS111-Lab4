@@ -347,8 +347,8 @@ int main(int argc, char **argv) {
 	      		s = search */
 	      	case 'y':
 	      		if (optarg) {
-	      			// TODO: opt_yield a char or int????? (see flags)
 	      			yield = optarg;
+	      			fprintf(stderr, "yield = %s\n", yield);
 	      		}
 	      		else {
 	      			fprintf(stderr, "Invalid yield option\n");
