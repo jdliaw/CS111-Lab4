@@ -22,7 +22,7 @@ check:
 
 dist: $(DISTDIR).tar.gz
 
-SOURCES = README Makefile addtest.c sltest.c SortedList.h SortedList.c answers.txt
+SOURCES = README Makefile addtest.c sltest.c SortedList.h answers.txt
 $(DISTDIR).tar.gz: $(SOURCES) check-dist
 	rm -fr $(DISTDIR)
 	tar -czf $@.tmp --transform='s,^,$(DISTDIR)/,' $(SOURCES)
