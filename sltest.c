@@ -43,19 +43,20 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 void* threadfunc(void* arg) {
 	int tid = (int) arg;
 
+	fprintf(stderr, "starting inserts\n");
 	// insert elements into the list
 	for (int i = 0; i < iterations; i++) {
 		long long index = (tid*iterations) + i;
 		if (mutex) {
 			// use pthread_mutex
-		  fprintf(stderr, "insert = mutex\n");
+		  //		  fprintf(stderr, "insert = mutex\n");
 		  pthread_mutex_lock(&lock);
 			SortedList_insert(list, &elements[index]);
 			pthread_mutex_unlock(&lock);
 		}
 		else if (spin) {
 			// use test and set
-		  fprintf(stderr, "insert = spin\n");
+		  //fprintf(stderr, "insert = spin\n");
 			while(__sync_lock_test_and_set(&lock_s, 1));
 			SortedList_insert(list, &elements[index]);
 			__sync_lock_release(&lock_s, 1);
@@ -65,17 +66,19 @@ void* threadfunc(void* arg) {
 			SortedList_insert(list, &elements[index]);
 		}
 	}
+	fprintf(stderr, "finished inserts\n");
 
 	// get list length
 	int len;
+	fprintf(stderr, "starting length\n");
 	if (mutex) {
-	  fprintf(stderr, "length = mutex\n");
+	  // fprintf(stderr, "length = mutex\n");
 		pthread_mutex_lock(&lock);
 		len = SortedList_length(list);
 		pthread_mutex_unlock(&lock);
 	}
 	else if (spin) {
-	  fprintf(stderr, "length = spin\n");
+	  //fprintf(stderr, "length = spin\n");
 		while(__sync_lock_test_and_set(&lock_s, 1));
 		len = SortedList_length(list);
 		__sync_lock_release(&lock_s, 1);
@@ -83,22 +86,24 @@ void* threadfunc(void* arg) {
 	else {
 		len = SortedList_length(list);
 	}
+	fprintf(stderr, "finished length\n");
 
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
 	int ret;
 
+	fprintf(stderr, "starting lookup/del\n");
 	for (int i = 0; i < iterations; i++) {
 		long long index = (tid * iterations) + i;
 		if (mutex) {
-		  fprintf(stderr, "lookup/del = mutex\n");
+		  //	  fprintf(stderr, "lookup/del = mutex\n");
 			pthread_mutex_lock(&lock);
 			target = SortedList_lookup(list, keys[index]);
 			ret = SortedList_delete(target);
 			pthread_mutex_unlock(&lock);
 		}
 		else if (spin) {
-		  fprintf(stderr, "lookup/del = spin\n");
+		  //fprintf(stderr, "lookup/del = spin\n");
 			while(__sync_lock_test_and_set(&lock_s, 1));
 			target = SortedList_lookup(list, keys[index]);
 			ret = SortedList_delete(target);
@@ -120,6 +125,7 @@ void* threadfunc(void* arg) {
 			exit_status = 1;
 		}
 	}
+	fprintf(stderr, "finished lookup/del\n");
 }
 
 void sltest(long nthreads, long niter, char opt_yield) {
