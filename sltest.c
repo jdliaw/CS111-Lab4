@@ -24,7 +24,7 @@ int mutex = 0;
 int spin = 0;
 
 // array of mutexes / spinlocks
-pthread_mutex_t* mutex;
+pthread_mutex_t* mutexlock;
 static int* spinlock;
 // mutex/spinlock to lock length before locking stage
 static pthread_mutex_t lock; // for length
@@ -66,9 +66,9 @@ void* threadfunc(void* arg) {
 		int list_index = hash(elements[index].key);
 		if (mutex) {
 			// use pthread_mutex
-		    pthread_mutex_lock(&mutex[list_index]);
+		    pthread_mutex_lock(&mutexlock[list_index]);
 			SortedList_insert(&list[list_index], &elements[index]);
-			pthread_mutex_unlock(&mutex[list_index]);
+			pthread_mutex_unlock(&mutexlock[list_index]);
 		}
 		else if (spin) {
 			// use test and set
@@ -88,9 +88,9 @@ void* threadfunc(void* arg) {
 		pthread_mutex_lock(&lock);
 		// get length of each list
 		for (int i = 0; i < nlists; i++) {
-			pthread_mutex_lock(&mutex[i]);
+			pthread_mutex_lock(&mutexlock[i]);
 			len = SortedList_length(list);
-			pthread_mutex_unlock(&mutex[i]);
+			pthread_mutex_unlock(&mutexlock[i]);
 		}
 		pthread_mutex_unlock(&lock);
 	}
@@ -115,10 +115,10 @@ void* threadfunc(void* arg) {
 		long long index = (tid * iterations) + i;
 		int list_index= hash(elements[index].key);
 		if (mutex) {
-			pthread_mutex_lock(&mutex[list_index]);
+			pthread_mutex_lock(&mutexlock[list_index]);
 			target = SortedList_lookup(&list[list_index], keys[index]);
 			ret = SortedList_delete(target);
-			pthread_mutex_unlock(&mutex[list_index]);
+			pthread_mutex_unlock(&mutexlock[list_index]);
 		}
 		else if (spin) {
 			while(__sync_lock_test_and_set(&spinlock[list_index], 1));
@@ -158,14 +158,14 @@ void sltest(long nthreads, long niter, char opt_yield) {
 	// initialize mutexes & spinlocks
 	if (mutex) {
 		pthread_mutex_init(&lock, NULL);
-		mutex = malloc(sizeof(pthread_mutex_t*) * nlists);
+		mutexlock = malloc(sizeof(pthread_mutex_t*) * nlists);
 		// Error handling
-		if (mutex == NULL) {
+		if (mutexlock == NULL) {
 			fprintf(stderr, "Error allocating memory for mutexes\n");
 			exit_status = 1;
 		}
 		for (int i = 0; i < nlists; i++) {
-			pthread_mutex_init(&mutex[i], NULL);
+			pthread_mutex_init(&mutexlock[i], NULL);
 		}
 	}
 	if (spin) {
