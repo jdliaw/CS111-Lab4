@@ -4,13 +4,13 @@ CC = gcc
 CFLAGS = -std=gnu99 -pthread -lrt 
 DISTDIR = lab4-jenniferliawbrandonliu
 
-default:
+default: sltest addtest
 
 addtest: addtest.c
 	$(CC) $(CFLAGS) addtest.c -o $@
 
 sltest: sltest.c
-	$(CC) $(CFLAGS) SortedList.o sltest.c -o $@
+	$(CC) $(CFLAGS) sltest.c -o $@
 
 check:
 
