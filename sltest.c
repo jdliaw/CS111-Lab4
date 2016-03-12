@@ -86,6 +86,7 @@ void* threadfunc(void* arg) {
 
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
+	int ret;
 
 	for (int i = 0; i < iterations; i++) {
 		long long index = (tid * iterations) + i;
@@ -93,16 +94,19 @@ void* threadfunc(void* arg) {
 		  fprintf(stderr, "lookup/del = mutex\n");
 			pthread_mutex_lock(&lock);
 			target = SortedList_lookup(list, keys[index]);
+			ret = SortedList_delete(target);
 			pthread_mutex_unlock(&lock);
 		}
 		else if (spin) {
 		  fprintf(stderr, "lookup/del = spin\n");
 			while(__sync_lock_test_and_set(&lock_s, 1));
 			target = SortedList_lookup(list, keys[index]);
+			ret = SortedList_delete(target);
 			__sync_lock_release(&lock_s, 1);
 		}
 		else {
 		  	target = SortedList_lookup(list, keys[index]);
+		  	ret = SortedList_delete(target);
 		}
 		// Error handling
 		if (target == NULL) {
@@ -110,20 +114,6 @@ void* threadfunc(void* arg) {
 			exit_status = 1;
 		}
 
-		int ret;
-		if (mutex) {
-			pthread_mutex_lock(&lock);
-			ret = SortedList_delete(target);
-			pthread_mutex_unlock(&lock);
-		}
-		else if (spin) {
-			while(__sync_lock_test_and_set(&lock_s, 1));
-			ret = SortedList_delete(target);
-			__sync_lock_release(&lock_s, 1);
-		}
-		else {
-			ret = SortedList_delete(target);
-		}
 		// Error handling
 		if (ret != 0) {
 			fprintf(stderr, "Failed to delete target %s from SortedList\n", target->key);
@@ -277,26 +267,28 @@ int main(int argc, char **argv) {
 	      	/* sync option
 	      		m = mutex
 	      		s = spinlock s*/
-	    //   	case 's':
-	    //   		if (optarg) {
-	    //   			sync = *optarg;
-	    //   		}
-	    //   		else {
-	    //   			fprintf(stderr, "Invalid sync option\n");
-	    //   			exit(1);
-	    //   		}
-	    //   		// set sync flags accordingly
-	    //   		switch(sync) {
-	    //   			case 'm':
-	    //   				mutex = 1;
-	    //   				break;
-					// case 's':
-	    //   				spin = 1;
-	    //   				break;
-	    //   			default:
-	    //   				break;
-	    //   		}
-	    //   		break;
+	      	case 's':
+	      		if (optarg) {
+	      			sync = *optarg;
+	      		}
+	      		else {
+	      			fprintf(stderr, "Invalid sync option\n");
+	      			exit(1);
+	      		}
+	      		// set sync flags accordingly
+	      		switch(sync) {
+	      			case 'm':
+	      				mutex = 1;
+	      				fprintf(stderr, "sync = m\n");
+	      				break;
+					case 's':
+	      				spin = 1;
+	      				fprintf(stderr, "sync = s\n");
+	      				break;
+	      			default:
+	      				break;
+	      		}
+	      		break;
 	      	/* yield option 
 	      		i = insert
 	      		d = delete
