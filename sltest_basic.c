@@ -12,6 +12,7 @@
 char sync;
 int opt_yield;
 long long iterations;
+int exit_status = 0;
 
 SortedList_t* list = NULL;
 SortedListElement_t* elements = NULL;
@@ -25,22 +26,17 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 		"abcdefghijklmnopqrstuvwxyz"
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-	//fprintf(stderr, "Alpha size: %d\n", sizeof(alpha));
-	//	fprintf(stderr, "alpha[62]: %c\talpha[61]: %c\n", alpha[62], alpha[61]);
 	// randomly choose one of possible char for each char in s
 	for (int i = 0; i < len; i++) {
 	  int index = rand() % (sizeof(alpha)-1);
-	  //	  fprintf(stderr, "Generating random key\tIndex: %d\tKey: %c\n",index, alpha[index]);
 	  s[i] = alpha[index];
 	}
 
 	s[len] = '\0'; //terminate with nullbyte
 }
 
-// need different implementation for insert, lenth, and lookup/delete
 void* threadfunc(void* arg) {
 	fprintf(stderr, "Entered threadfunc\n");
-	//long long iterations = (long long) arg;
 	int tid = (int) arg;
 	fprintf(stderr, "tid = %d\n", tid);
 	fprintf(stderr, "iterations = %llu\n", iterations);
@@ -63,7 +59,7 @@ void* threadfunc(void* arg) {
 		target = SortedList_lookup(list, keys[i]);
 		if (target == NULL) {
 			fprintf(stderr, "Target not found\n");
-			// TODO: error handling
+			exit_status = 1;
 		}
 		else
 		  fprintf(stderr, "Target key: %s\n", target->key);
@@ -71,13 +67,12 @@ void* threadfunc(void* arg) {
 		int ret = SortedList_delete(target);
 		if (ret != 0) {
 			fprintf(stderr, "Failed to delete target from SortedList\n");
-			// TODO: error handling
+			exit_status = 1;
 		}
 	}
 }
 
 void sltest(long nthreads, long niter, char opt_yield) {
-	int exit_status = 0;
 
 	// malloc list array
 	list = malloc(sizeof(SortedList_t));
@@ -102,16 +97,13 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		exit_status = 1;
 	}
 
-
-	//char* p = keys;
 	// generate array of random keys
 	for (int i = 0; i < nelements; i++) {
-                int len = (rand() % 15) + 1; // generate a random size for each key
+        int len = (rand() % 15) + 1; // generate a random size for each key
 		keys[i] = malloc(sizeof(char*) * len);
 		random_key(keys[i], len);
 	}
 
-	fprintf(stderr, "did we get here\n");
 	// initialize elements with random keys
 	for (int i = 0; i < nelements; i++) {
 		fprintf(stderr, "Initializing element %d with key %s\n", i, keys[i]);
