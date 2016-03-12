@@ -11,11 +11,14 @@
 // global vars
 char sync;
 int opt_yield;
+int mutex = 0;
+int spin = 0;
+static pthread_mutex_t lock;
+volatile int lock_s = 0;
 
 SortedList_t* list = NULL;
 SortedListElement_t* elements = NULL;
-
-char** keys = NULL;
+char* keys = NULL;
 
 // generate random key of length len
 void random_key(char* s, int len) { // TODO: s as pointer is ok?
@@ -24,16 +27,12 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 		"abcdefghijklmnopqrstuvwxyz"
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-	fprintf(stderr, "Alpha size: %d\n", sizeof(alpha));
-	fprintf(stderr, "alpha[62]: %c\talpha[61]: %c\n", alpha[62], alpha[61]);
 	// randomly choose one of possible char for each char in s
 	for (int i = 0; i < len; i++) {
-	  int index = rand() % (sizeof(alpha)-1);
-	  fprintf(stderr, "Generating random key\tIndex: %d\tKey: %c\n",index, alpha[index]);
-	  s[i] = alpha[index];
+		s[i] = alpha[rand() % (sizeof(alpha)-1)];
 	}
 
-	s[len] = '\0'; //terminate with nullbyte
+	s[len] = 0; //terminate with nullbyte
 }
 
 // need different implementation for insert, lenth, and lookup/delete
@@ -42,30 +41,70 @@ void* threadfunc(void* arg) {
 	long long nelements = (long long) arg;
 	fprintf(stderr, "nelements = %llu\n", nelements);
 
-
 	// insert elements into the list
 	for (int i = 0; i < nelements; i++) {
-         	fprintf(stderr, "Inserting element with key %s\n", elements[i].key);
-		SortedList_insert(list, &elements[i]);
+		fprintf(stderr, "Inserting element with key %s\n", elements[i].key);
+		if (mutex) {
+			pthread_mutex_lock(&lock);
+			SortedList_insert(list, &elements[i]);
+			pthread_mutex_unlock(&lock);
+		}
+		else if (spin) {
+			while(__sync_lock_test_and_set(&lock_s, 1));
+			SortedList_insert(list, &elements[i]);
+			__sync_lock_release(&lock_s, 1);
+		}
+		else {
+			SortedList_insert(list, &elements[i]);
+		}
 	}
 
 	// get list length
-	int len = SortedList_length(list);
+	int len;
+	if (mutex) {
+		pthread_mutex_lock(&lock);
+		len = SortedList_length(list);
+		pthread_mutex_unlock(&lock);
+	}
+	else if (spin) {
+		while(__sync_lock_test_and_set(&lock_s, 1));
+		len = SortedList_length(list);
+		__sync_lock_release(&lock_s, 1);
+	}
+	else {
+		len = SortedList_length(list);
+	}
 	fprintf(stderr, "len = %d\n", len);
 
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
 
 	for (int i = 0; i < nelements; i++) {
-		target = SortedList_lookup(list, keys[i]);
+		int ret;
+		if (mutex) {
+			pthread_mutex_lock(&lock);
+			target = SortedList_lookup(list, &keys[i]);
+			ret = SortedList_delete(target);
+			pthread_mutex_unlock(&lock);
+		}
+		else if (spin) {
+			while(__sync_lock_test_and_set(&lock_s, 1));
+			target = SortedList_lookup(list, &keys[i]);
+			ret = SortedList_delete(target);
+			__sync_lock_release(&lock_s, 1);
+		}
+		else {
+			target = SortedList_lookup(list, &keys[i]);
+			ret = SortedList_delete(target);
+		}
+
 		if (target == NULL) {
 			fprintf(stderr, "Target not found\n");
 			// TODO: error handling
 		}
 		else
-		  fprintf(stderr, "Target key: %s\n", target->key);
+			fprintf(stderr, "Target key: %s\n", target->key);
 
-		int ret = SortedList_delete(target);
 		if (ret != 0) {
 			fprintf(stderr, "Failed to delete target from SortedList\n");
 			// TODO: error handling
@@ -99,20 +138,24 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		exit_status = 1;
 	}
 
-
-	//char* p = keys;
+	char* p = keys;
 	// generate array of random keys
 	for (int i = 0; i < nelements; i++) {
-                int len = (rand() % 15) + 1; // generate a random size for each key
-		keys[i] = malloc(sizeof(char*) * len);
-		random_key(keys[i], len);
+		int len = rand() % 15; // generate a random size for each key
+		p = p+i;
+		p = malloc(sizeof(char*) * len);
+		//(keys + i) = (char*) malloc(sizeof(char*) * len);
+		if (p == NULL) {
+			fprintf(stderr, "Error allocating memory for key\n");
+			exit_status = 1;
+		}
+		random_key(&keys[i], len);
 	}
 
-	fprintf(stderr, "did we get here\n");
 	// initialize elements with random keys
 	for (int i = 0; i < nelements; i++) {
-		fprintf(stderr, "Initializing element %d with key %s\n", i, keys[i]);
-		elements[i].key = keys[i];
+		fprintf(stderr, "Initializing element %d with key %c\n", i, keys[i]);
+		elements[i].key = &keys[i];
 		elements[i].next = NULL;
 		elements[i].prev = NULL;
 	}
@@ -233,26 +276,26 @@ int main(int argc, char **argv) {
 	      	/* sync option
 	      		m = mutex
 	      		s = spinlock s*/
-	    //   	case 's':
-	    //   		if (optarg) {
-	    //   			sync = *optarg;
-	    //   		}
-	    //   		else {
-	    //   			fprintf(stderr, "Invalid sync option\n");
-	    //   			exit(1);
-	    //   		}
-	    //   		// set sync flags accordingly
-	    //   		switch(sync) {
-	    //   			case 'm':
-	    //   				mutex = 1;
-	    //   				break;
-					// case 's':
-	    //   				spin = 1;
-	    //   				break;
-	    //   			default:
-	    //   				break;
-	    //   		}
-	    //   		break;
+	      	case 's':
+	      		if (optarg) {
+	      			sync = *optarg;
+	      		}
+	      		else {
+	      			fprintf(stderr, "Invalid sync option\n");
+	      			exit(1);
+	      		}
+	      		// set sync flags accordingly
+	      		switch(sync) {
+	      			case 'm':
+	      				mutex = 1;
+	      				break;
+					case 's':
+	      				spin = 1;
+	      				break;
+	      			default:
+	      				break;
+	      		}
+	      		break;
 	      	/* yield option 
 	      		i = insert
 	      		d = delete
@@ -306,6 +349,6 @@ int main(int argc, char **argv) {
 
  	fprintf(stderr, "About to enter sltest\n");
  	sltest(nthreads, iterations, opt_yield);
-	return 0;
 
+ 	return 0;
 }

@@ -40,9 +40,17 @@ typedef struct SortedListElement SortedListElement_t;
  */
 void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 	SortedListElement_t* cur = list->next;
+<<<<<<< HEAD
 	while(cur != list) {
 	  if(strcmp(element->key, cur->key) <= 0) {
 	    //	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
+=======
+	
+	while(cur != list) {
+	  // fprintf(stderr, "cur!=list\n");
+	  if(strcmp(element->key, cur->key) <= 0) {
+	    	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
+>>>>>>> 57c1145b4110ad914d6a56340aac69b8f3e36c63
 	    break;
 	  }
 	  cur = cur->next;
@@ -53,7 +61,10 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 	element->next = cur;
 	element->prev->next = element;
 	element->next->prev = element;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 57c1145b4110ad914d6a56340aac69b8f3e36c63
 }
 
 /**
@@ -135,6 +146,10 @@ int SortedList_length(SortedList_t *list) {
   	}
 
   	while(cur != list) {
+<<<<<<< HEAD
+=======
+    	fprintf(stderr, "Key: %s\n", cur->key);
+>>>>>>> 57c1145b4110ad914d6a56340aac69b8f3e36c63
     	cur = cur->next;
     	counter++;
   	}
