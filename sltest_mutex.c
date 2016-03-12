@@ -11,14 +11,13 @@
 // global vars
 char sync;
 int opt_yield;
-int mutex = 0;
-int spin = 0;
-static pthread_mutex_t lock;
-volatile int lock_s = 0;
+long long iterations;
+int exit_status = 0;
 
 SortedList_t* list = NULL;
 SortedListElement_t* elements = NULL;
-char* keys = NULL;
+
+char** keys = NULL;
 
 // generate random key of length len
 void random_key(char* s, int len) { // TODO: s as pointer is ok?
@@ -29,92 +28,48 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 
 	// randomly choose one of possible char for each char in s
 	for (int i = 0; i < len; i++) {
-		s[i] = alpha[rand() % (sizeof(alpha)-1)];
+	  int index = rand() % (sizeof(alpha)-1);
+	  s[i] = alpha[index];
 	}
 
-	s[len] = 0; //terminate with nullbyte
+	s[len] = '\0'; //terminate with nullbyte
 }
 
-// need different implementation for insert, lenth, and lookup/delete
 void* threadfunc(void* arg) {
 	fprintf(stderr, "Entered threadfunc\n");
-	long long nelements = (long long) arg;
-	fprintf(stderr, "nelements = %llu\n", nelements);
+	int tid = (int) arg;
+	fprintf(stderr, "tid = %d\n", tid);
+	fprintf(stderr, "iterations = %llu\n", iterations);
+
 
 	// insert elements into the list
-	for (int i = 0; i < nelements; i++) {
-		fprintf(stderr, "Inserting element with key %s\n", elements[i].key);
-		if (mutex) {
-			pthread_mutex_lock(&lock);
-			SortedList_insert(list, &elements[i]);
-			pthread_mutex_unlock(&lock);
-		}
-		else if (spin) {
-			while(__sync_lock_test_and_set(&lock_s, 1));
-			SortedList_insert(list, &elements[i]);
-			__sync_lock_release(&lock_s, 1);
-		}
-		else {
-			SortedList_insert(list, &elements[i]);
-		}
+	for (int i = 0; i < iterations; i++) {
+		SortedList_insert(list, &elements[(tid*iterations)+i]);
 	}
 
 	// get list length
-	int len;
-	if (mutex) {
-		pthread_mutex_lock(&lock);
-		len = SortedList_length(list);
-		pthread_mutex_unlock(&lock);
-	}
-	else if (spin) {
-		while(__sync_lock_test_and_set(&lock_s, 1));
-		len = SortedList_length(list);
-		__sync_lock_release(&lock_s, 1);
-	}
-	else {
-		len = SortedList_length(list);
-	}
+	int len = SortedList_length(list);
 	fprintf(stderr, "len = %d\n", len);
 
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
 
-	for (int i = 0; i < nelements; i++) {
-		int ret;
-		if (mutex) {
-			pthread_mutex_lock(&lock);
-			target = SortedList_lookup(list, &keys[i]);
-			ret = SortedList_delete(target);
-			pthread_mutex_unlock(&lock);
-		}
-		else if (spin) {
-			while(__sync_lock_test_and_set(&lock_s, 1));
-			target = SortedList_lookup(list, &keys[i]);
-			ret = SortedList_delete(target);
-			__sync_lock_release(&lock_s, 1);
-		}
-		else {
-			target = SortedList_lookup(list, &keys[i]);
-			ret = SortedList_delete(target);
-		}
-
+	for (int i = 0; i < iterations; i++) {
+	  target = SortedList_lookup(list, keys[(tid*iterations)+i]);
 		if (target == NULL) {
 			fprintf(stderr, "Target not found\n");
-			// TODO: error handling
+			exit_status = 1;
 		}
-		else
-			fprintf(stderr, "Target key: %s\n", target->key);
 
+		int ret = SortedList_delete(target);
 		if (ret != 0) {
-			fprintf(stderr, "Failed to delete target from SortedList\n");
-			// TODO: error handling
+			fprintf(stderr, "Failed to delete target %s from SortedList\n", target->key);
+			exit_status = 1;
 		}
 	}
 }
 
 void sltest(long nthreads, long niter, char opt_yield) {
-	int exit_status = 0;
-
 	// malloc list array
 	list = malloc(sizeof(SortedList_t));
 	list->key = NULL;
@@ -128,8 +83,6 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		fprintf(stderr, "Error allocating memory for list elements\n");
 		exit_status = 1;
 	}
-	else
-		fprintf(stderr, "Success in allocating list array\n");
 
 	// malloc array for random keys
 	keys = malloc(sizeof(char*) * nelements);
@@ -138,24 +91,16 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		exit_status = 1;
 	}
 
-	char* p = keys;
 	// generate array of random keys
 	for (int i = 0; i < nelements; i++) {
-		int len = rand() % 15; // generate a random size for each key
-		p = p+i;
-		p = malloc(sizeof(char*) * len);
-		//(keys + i) = (char*) malloc(sizeof(char*) * len);
-		if (p == NULL) {
-			fprintf(stderr, "Error allocating memory for key\n");
-			exit_status = 1;
-		}
-		random_key(&keys[i], len);
+        int len = (rand() % 15) + 1; // generate a random size for each key
+		keys[i] = malloc(sizeof(char*) * len);
+		random_key(keys[i], len);
 	}
 
 	// initialize elements with random keys
 	for (int i = 0; i < nelements; i++) {
-		fprintf(stderr, "Initializing element %d with key %c\n", i, keys[i]);
-		elements[i].key = &keys[i];
+		elements[i].key = keys[i];
 		elements[i].next = NULL;
 		elements[i].prev = NULL;
 	}
@@ -169,8 +114,6 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		fprintf(stderr, "Error getting start time\n");
 		exit_status = 1;
 	}
-	else
-		fprintf(stderr, "Got start time\n");
 
 	// create and start threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
@@ -178,17 +121,13 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		fprintf(stderr, "Error allocating memory for threads\n");
 		exit_status = 1;
 	}
-	else
-		fprintf(stderr, "Success in creating thread array\n");
 
 	for (int i = 0; i < nthreads; i++) {
-		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)nelements);
+		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)i);
 		if (pthread_ret != 0) {
 			fprintf(stderr, "Error creating threads\n");
 			exit_status = 1;
 		}
-		else
-			fprintf(stderr, "Success creating thread %d\n", i);
 	}
 
 	// wait for all threads to complete
@@ -209,7 +148,6 @@ void sltest(long nthreads, long niter, char opt_yield) {
 
 	// check length of list to confirm that it is zero
 	int len = SortedList_length(list);
-	fprintf(stderr,"Final length = %d", len);
 	if (len != 0) {
 		fprintf(stderr, "ERROR: final length = %lld\n", len);
 		exit_status = 1;
@@ -230,7 +168,7 @@ void sltest(long nthreads, long niter, char opt_yield) {
 
 int main(int argc, char **argv) {
 	long long nthreads = 0;
-	long long iterations = 0;
+	//	long long iterations = 0;
 	char* yield;
 
 	while (1) {
@@ -347,8 +285,7 @@ int main(int argc, char **argv) {
 	  	}
  	}
 
- 	fprintf(stderr, "About to enter sltest\n");
  	sltest(nthreads, iterations, opt_yield);
+	return 0;
 
- 	return 0;
 }
