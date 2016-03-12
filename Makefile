@@ -16,7 +16,7 @@ check:
 
 dist: $(DISTDIR).tar.gz
 
-SOURCES = README Makefile addtest.c sltest.c SortedList.h answers.txt
+SOURCES = README Makefile addtest.c sltest.c SortedList.h answers.txt graphs.pdf
 $(DISTDIR).tar.gz: $(SOURCES) check-dist
 	rm -fr $(DISTDIR)
 	tar -czf $@.tmp --transform='s,^,$(DISTDIR)/,' $(SOURCES)
@@ -24,6 +24,6 @@ $(DISTDIR).tar.gz: $(SOURCES) check-dist
 	mv $@.tmp $@
 
 clean:
-	rm -fr *.o *~ *.tar.gz *.tmp core *.core addtest
+	rm -fr *.o *~ *.tar.gz *.tmp core *.core addtest sltest $(DISTDIR)
 
 .PHONY: all dist check clean
