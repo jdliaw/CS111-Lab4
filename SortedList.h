@@ -40,31 +40,23 @@ typedef struct SortedListElement SortedListElement_t;
  */
 void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 	SortedListElement_t* cur = list->next;
-<<<<<<< HEAD
-	while(cur != list) {
-	  if(strcmp(element->key, cur->key) <= 0) {
-	    //	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
-=======
-	
 	while(cur != list) {
 	  // fprintf(stderr, "cur!=list\n");
+	  //	  fprintf(stderr, "elem: %s\tcur: %s\n", element->key, cur->key);
+	  //	  fprintf(stderr, "list->key: %s\n", list->key);
 	  if(strcmp(element->key, cur->key) <= 0) {
-	    	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
->>>>>>> 57c1145b4110ad914d6a56340aac69b8f3e36c63
+	    
+	    //	    	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
 	    break;
 	  }
 	  cur = cur->next;
 	}
-
+	fprintf(stderr, "past cur!=list\n");
 	//at this point, element->key is less than cur->key.
 	element->prev = cur->prev;
 	element->next = cur;
 	element->prev->next = element;
 	element->next->prev = element;
-<<<<<<< HEAD
-
-=======
->>>>>>> 57c1145b4110ad914d6a56340aac69b8f3e36c63
 }
 
 /**
@@ -140,18 +132,15 @@ SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
 int SortedList_length(SortedList_t *list) {
 	SortedListElement_t* cur = list->next;
   	int counter = 0;
-
+	fprintf(stderr, "in length\n");
   	if(opt_yield & SEARCH_YIELD) {
    	 	pthread_yield();
   	}
 
   	while(cur != list) {
-<<<<<<< HEAD
-=======
-    	fprintf(stderr, "Key: %s\n", cur->key);
->>>>>>> 57c1145b4110ad914d6a56340aac69b8f3e36c63
-    	cur = cur->next;
-    	counter++;
+	  //	fprintf(stderr, "Key: %s\n", cur->key);
+    		cur = cur->next;
+    		counter++;
   	}
   	return counter;
 }

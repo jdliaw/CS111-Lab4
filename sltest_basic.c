@@ -11,6 +11,7 @@
 // global vars
 char sync;
 int opt_yield;
+long long iterations;
 
 SortedList_t* list = NULL;
 SortedListElement_t* elements = NULL;
@@ -24,12 +25,12 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 		"abcdefghijklmnopqrstuvwxyz"
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-	fprintf(stderr, "Alpha size: %d\n", sizeof(alpha));
-	fprintf(stderr, "alpha[62]: %c\talpha[61]: %c\n", alpha[62], alpha[61]);
+	//fprintf(stderr, "Alpha size: %d\n", sizeof(alpha));
+	//	fprintf(stderr, "alpha[62]: %c\talpha[61]: %c\n", alpha[62], alpha[61]);
 	// randomly choose one of possible char for each char in s
 	for (int i = 0; i < len; i++) {
 	  int index = rand() % (sizeof(alpha)-1);
-	  fprintf(stderr, "Generating random key\tIndex: %d\tKey: %c\n",index, alpha[index]);
+	  //	  fprintf(stderr, "Generating random key\tIndex: %d\tKey: %c\n",index, alpha[index]);
 	  s[i] = alpha[index];
 	}
 
@@ -39,14 +40,16 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 // need different implementation for insert, lenth, and lookup/delete
 void* threadfunc(void* arg) {
 	fprintf(stderr, "Entered threadfunc\n");
-	long long nelements = (long long) arg;
-	fprintf(stderr, "nelements = %llu\n", nelements);
+	//long long iterations = (long long) arg;
+	int tid = (int) arg;
+	fprintf(stderr, "tid = %d\n", tid);
+	fprintf(stderr, "iterations = %llu\n", iterations);
 
 
 	// insert elements into the list
-	for (int i = 0; i < nelements; i++) {
+	for (int i = 0; i < iterations; i++) {
          	fprintf(stderr, "Inserting element with key %s\n", elements[i].key);
-		SortedList_insert(list, &elements[i]);
+		SortedList_insert(list, &elements[(tid*iterations) + i]);
 	}
 
 	// get list length
@@ -56,7 +59,7 @@ void* threadfunc(void* arg) {
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
 
-	for (int i = 0; i < nelements; i++) {
+	for (int i = 0; i < iterations; i++) {
 		target = SortedList_lookup(list, keys[i]);
 		if (target == NULL) {
 			fprintf(stderr, "Target not found\n");
@@ -139,7 +142,7 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		fprintf(stderr, "Success in creating thread array\n");
 
 	for (int i = 0; i < nthreads; i++) {
-		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)nelements);
+		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)i);
 		if (pthread_ret != 0) {
 			fprintf(stderr, "Error creating threads\n");
 			exit_status = 1;
@@ -187,7 +190,7 @@ void sltest(long nthreads, long niter, char opt_yield) {
 
 int main(int argc, char **argv) {
 	long long nthreads = 0;
-	long long iterations = 0;
+	//	long long iterations = 0;
 	char* yield;
 
 	while (1) {
