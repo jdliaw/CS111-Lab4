@@ -48,12 +48,14 @@ void* threadfunc(void* arg) {
 		long long index = (tid*iterations) + i;
 		if (mutex) {
 			// use pthread_mutex
-			pthread_mutex_lock(&lock);
+		  fprintf(stderr, "insert = mutex\n");
+		  pthread_mutex_lock(&lock);
 			SortedList_insert(list, &elements[index]);
 			pthread_mutex_unlock(&lock);
 		}
 		else if (spin) {
 			// use test and set
+		  fprintf(stderr, "insert = spin\n");
 			while(__sync_lock_test_and_set(&lock_s, 1));
 			SortedList_insert(list, &elements[index]);
 			__sync_lock_release(&lock_s, 1);
@@ -67,11 +69,13 @@ void* threadfunc(void* arg) {
 	// get list length
 	int len;
 	if (mutex) {
+	  fprintf(stderr, "length = mutex\n");
 		pthread_mutex_lock(&lock);
 		len = SortedList_length(list);
 		pthread_mutex_unlock(&lock);
 	}
 	else if (spin) {
+	  fprintf(stderr, "length = spin\n");
 		while(__sync_lock_test_and_set(&lock_s, 1));
 		len = SortedList_length(list);
 		__sync_lock_release(&lock_s, 1);
@@ -86,11 +90,13 @@ void* threadfunc(void* arg) {
 	for (int i = 0; i < iterations; i++) {
 		long long index = (tid * iterations) + i;
 		if (mutex) {
+		  fprintf(stderr, "lookup/del = mutex\n");
 			pthread_mutex_lock(&lock);
 			target = SortedList_lookup(list, keys[index]);
 			pthread_mutex_unlock(&lock);
 		}
 		else if (spin) {
+		  fprintf(stderr, "lookup/del = spin\n");
 			while(__sync_lock_test_and_set(&lock_s, 1));
 			target = SortedList_lookup(list, keys[index]);
 			__sync_lock_release(&lock_s, 1);
