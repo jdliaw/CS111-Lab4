@@ -44,9 +44,9 @@ void* threadfunc(void* arg) {
 
 	// insert elements into the list
 	for (int i = 0; i < iterations; i++) {
-	  long long index = (tid*iterations)+i;
-         	fprintf(stderr, "Inserting element with key %s\n", elements[index].key);
-		fprintf(stderr, "index = %llu\n", (tid*iterations)+i);
+	  //long long index = (tid*iterations)+i;
+        //fprintf(stderr, "Inserting element with key %s\n", elements[index].key);
+		//fprintf(stderr, "index = %llu\n", (tid*iterations)+i);
 		SortedList_insert(list, &elements[(tid*iterations) + i]);
 	}
 
@@ -64,7 +64,7 @@ void* threadfunc(void* arg) {
 			exit_status = 1;
 		}
 		else
-		  fprintf(stderr, "Target key: %s\n", target->key);
+		  //fprintf(stderr, "Target key: %s\n", target->key);
 
 		int ret = SortedList_delete(target);
 		if (ret != 0) {
@@ -108,7 +108,7 @@ void sltest(long nthreads, long niter, char opt_yield) {
 
 	// initialize elements with random keys
 	for (int i = 0; i < nelements; i++) {
-		fprintf(stderr, "Initializing element %d with key %s\n", i, keys[i]);
+		//fprintf(stderr, "Initializing element %d with key %s\n", i, keys[i]);
 		elements[i].key = keys[i];
 		elements[i].next = NULL;
 		elements[i].prev = NULL;

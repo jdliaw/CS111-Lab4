@@ -78,7 +78,7 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 int SortedList_delete( SortedListElement_t *element) {
 	if (element->next->prev != element || element->prev->next != element) {
 		// make sure next-prev and prev-next both point to this node
-	        fprintf(stderr, "Error in delete\n");
+	       // fprintf(stderr, "Error in delete\n");
 		return -1;
 	}
 
