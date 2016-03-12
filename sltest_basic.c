@@ -36,10 +36,10 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 }
 
 void* threadfunc(void* arg) {
-	fprintf(stderr, "Entered threadfunc\n");
+  //	fprintf(stderr, "Entered threadfunc\n");
 	int tid = (int) arg;
-	fprintf(stderr, "tid = %d\n", tid);
-	fprintf(stderr, "iterations = %llu\n", iterations);
+	//	fprintf(stderr, "tid = %d\n", tid);
+	//fprintf(stderr, "iterations = %llu\n", iterations);
 
 
 	// insert elements into the list
@@ -52,7 +52,7 @@ void* threadfunc(void* arg) {
 
 	// get list length
 	int len = SortedList_length(list);
-	fprintf(stderr, "len = %d\n", len);
+	//fprintf(stderr, "len = %d\n", len);
 
 	// look up each of keys inserted & delete each returned element
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
@@ -63,7 +63,7 @@ void* threadfunc(void* arg) {
 			fprintf(stderr, "Target not found\n");
 			exit_status = 1;
 		}
-		else
+		//		else
 		  //fprintf(stderr, "Target key: %s\n", target->key);
 
 		int ret = SortedList_delete(target);
@@ -89,8 +89,8 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		fprintf(stderr, "Error allocating memory for list elements\n");
 		exit_status = 1;
 	}
-	else
-		fprintf(stderr, "Success in allocating list array\n");
+	//	else
+	//	fprintf(stderr, "Success in allocating list array\n");
 
 	// malloc array for random keys
 	keys = malloc(sizeof(char*) * nelements);
@@ -123,8 +123,8 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		fprintf(stderr, "Error getting start time\n");
 		exit_status = 1;
 	}
-	else
-		fprintf(stderr, "Got start time\n");
+	//else
+	//	fprintf(stderr, "Got start time\n");
 
 	// create and start threads
 	pthread_t *tids = malloc(nthreads * sizeof(pthread_t));
@@ -132,8 +132,8 @@ void sltest(long nthreads, long niter, char opt_yield) {
 		fprintf(stderr, "Error allocating memory for threads\n");
 		exit_status = 1;
 	}
-	else
-		fprintf(stderr, "Success in creating thread array\n");
+	//else
+	//	fprintf(stderr, "Success in creating thread array\n");
 
 	for (int i = 0; i < nthreads; i++) {
 		int pthread_ret = pthread_create(&tids[i], NULL, threadfunc, (void*)i);
@@ -141,8 +141,8 @@ void sltest(long nthreads, long niter, char opt_yield) {
 			fprintf(stderr, "Error creating threads\n");
 			exit_status = 1;
 		}
-		else
-			fprintf(stderr, "Success creating thread %d\n", i);
+		//	else
+		//	fprintf(stderr, "Success creating thread %d\n", i);
 	}
 
 	// wait for all threads to complete
