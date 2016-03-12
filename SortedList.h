@@ -41,20 +41,15 @@ typedef struct SortedListElement SortedListElement_t;
 void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 	SortedListElement_t* cur = list->next;
 	while(cur != list) {
-	  // fprintf(stderr, "cur!=list\n");
-	  //	  fprintf(stderr, "elem: %s\tcur: %s\n", element->key, cur->key);
-	  //	  fprintf(stderr, "list->key: %s\n", list->key);
 	  if(strcmp(element->key, cur->key) <= 0) {
-	    
-	    //	    	    fprintf(stderr, "element->key: %s, cur->key: %s\n", element->key, cur->key);
 	    break;
 	  }
 	  cur = cur->next;
 	}
-	//	fprintf(stderr, "past cur!=list\n");
-	//at this point, element->key is less than cur->key.
 	element->prev = cur->prev;
 	element->next = cur;
+	if (opt_yield & INSERT_YIELD)
+		pthread_yield();
 	element->prev->next = element;
 	element->next->prev = element;
 }
@@ -78,12 +73,13 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 int SortedList_delete( SortedListElement_t *element) {
 	if (element->next->prev != element || element->prev->next != element) {
 		// make sure next-prev and prev-next both point to this node
-	       // fprintf(stderr, "Error in delete\n");
 		return -1;
 	}
 
     //able to delete
 	element->prev->next = element->next;
+	if (opt_yield & DELETE_YIELD)
+		pthread_yield();
 	element->next->prev = element->prev;
 
 	return 0;
@@ -132,13 +128,12 @@ SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
 int SortedList_length(SortedList_t *list) {
 	SortedListElement_t* cur = list->next;
   	int counter = 0;
-	//fprintf(stderr, "in length\n");
+
   	if(opt_yield & SEARCH_YIELD) {
    	 	pthread_yield();
   	}
 
   	while(cur != list) {
-	  //	fprintf(stderr, "Key: %s\n", cur->key);
     		cur = cur->next;
     		counter++;
   	}
