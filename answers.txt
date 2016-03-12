@@ -37,3 +37,39 @@ ther threads cannot operate on the same variable. For spinlocks, it's the same a
 
 3. Spin-locks are so expensive for large number of threads because only one thread can operate at a time, so many threads will 
 not be able to operate. When they are unable to acquire a lock, they will just chew up CPU as they spin.
+
+2.1
+The time per operation vs number of iterations at first is similar to part 1, with it decreasing with more iterations. However,
+at about 200 iterations, it caps out and starts to rise greatly. The first drop is similar to the issue with thread overhead
+from part 1, but unlike part 1, with more and more insertions and lookups, the time increases as it has to potentially go
+through the entire list to find a value, so the time per operation goes up. If this is the issue, we could find an approximate
+relation between the size of list and how long it would take to insert, and factor that into the calculation.
+
+2.2
+With more threads in Part 2, the time per operation significantly increases. Given an increase in threads, it may take the
+same amount of time to add something, or the actual insertion itself. But because the lookup time to insert is much longer,
+when threads collide there is much more wasted time and hence there is a greater variation of time in Part 2 than in Part 1.
+
+2.3
+1. We had some trouble implementing several lists. However, it can be assumed that if the ratio of lists to threads is large,
+then there would be fewer thread collisions, and hence an increase in performance given fewer threads per list.
+
+2. Threads per list is more interesting number than just threads because it shows it shows the interaction of both threads
+and number of lists. The relation of threads and how often they collide with differen threads to work on is a better 
+measurement of performance.
+
+3.1
+1. The mutex must be held when pthread_cond_wait is called because if it isn't then it cannot guarantee atomic actions.
+If it is not held, it can be changed during the time that pthread_cond_wait is called.
+
+2. The mutex must be released when the waiting thread is blocked because if it is blocked and it holds onto the mutex,
+other threads won't be able to operate on whatever it is holding onto. Thus, it's possible to not only slow down performance,
+but to potentially cause deadlock or some similar loop.
+
+3. The mutex must be reacquired when the calling thread resumes so that it can block race conditions. It's similar to the
+first question.
+
+4. The mutex cannot be released before calling pthread_cond_wait because there would be a race condition again. It could be
+modified in between the release and wait.
+
+5. It would not be possible to do it in user mode. This system call would trap and go to kernel and thus could be implemented.
