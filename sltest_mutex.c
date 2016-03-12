@@ -43,7 +43,7 @@ void* threadfunc(void* arg) {
 
 	// insert elements into the list
 	for (int i = 0; i < nelements; i++) {
-		fprintf(stderr, "Inserting element with key %c\n", elements[i].key);
+		fprintf(stderr, "Inserting element with key %s\n", elements[i].key);
 		if (mutex) {
 			pthread_mutex_lock(&lock);
 			SortedList_insert(list, &elements[i]);
@@ -103,7 +103,7 @@ void* threadfunc(void* arg) {
 			// TODO: error handling
 		}
 		else
-			fprintf(stderr, "Target key: %c\n", target->key);
+			fprintf(stderr, "Target key: %s\n", target->key);
 
 		if (ret != 0) {
 			fprintf(stderr, "Failed to delete target from SortedList\n");

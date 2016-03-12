@@ -41,6 +41,7 @@ void* threadfunc(void* arg) {
 	long long nelements = (long long) arg;
 	fprintf(stderr, "nelements = %llu\n", nelements);
 
+	fprintf(stderr, "key[18] = %c\n", keys[18]);
 	// insert elements into the list
 	for (int i = 0; i < nelements; i++) {
 	  fprintf(stderr, "Inserting element with key %c\n", (*elements[i].key));
@@ -61,7 +62,7 @@ void* threadfunc(void* arg) {
 			// TODO: error handling
 		}
 		else
-		  fprintf(stderr, "Target key: %c\n", *(target->key));
+		  fprintf(stderr, "Target key: %s\n", target->key);
 
 		int ret = SortedList_delete(target);
 		if (ret != 0) {
