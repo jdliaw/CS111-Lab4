@@ -44,7 +44,9 @@ void* threadfunc(void* arg) {
 
 	// insert elements into the list
 	for (int i = 0; i < iterations; i++) {
-         	fprintf(stderr, "Inserting element with key %s\n", elements[i].key);
+	  long long index = (tid*iterations)+i;
+         	fprintf(stderr, "Inserting element with key %s\n", elements[index].key);
+		fprintf(stderr, "index = %llu\n", (tid*iterations)+i);
 		SortedList_insert(list, &elements[(tid*iterations) + i]);
 	}
 
@@ -56,7 +58,7 @@ void* threadfunc(void* arg) {
 	SortedListElement_t* target = malloc(sizeof(SortedListElement_t));
 
 	for (int i = 0; i < iterations; i++) {
-		target = SortedList_lookup(list, keys[i]);
+	  target = SortedList_lookup(list, keys[(tid*iterations)+i]);
 		if (target == NULL) {
 			fprintf(stderr, "Target not found\n");
 			exit_status = 1;

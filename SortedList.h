@@ -51,7 +51,7 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 	  }
 	  cur = cur->next;
 	}
-	fprintf(stderr, "past cur!=list\n");
+	//	fprintf(stderr, "past cur!=list\n");
 	//at this point, element->key is less than cur->key.
 	element->prev = cur->prev;
 	element->next = cur;
@@ -132,7 +132,7 @@ SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
 int SortedList_length(SortedList_t *list) {
 	SortedListElement_t* cur = list->next;
   	int counter = 0;
-	fprintf(stderr, "in length\n");
+	//fprintf(stderr, "in length\n");
   	if(opt_yield & SEARCH_YIELD) {
    	 	pthread_yield();
   	}
