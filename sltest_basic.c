@@ -23,12 +23,16 @@ void random_key(char* s, int len) { // TODO: s as pointer is ok?
 		"abcdefghijklmnopqrstuvwxyz"
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+	fprintf(stderr, "Alpha size: %d\n", sizeof(alpha));
+	fprintf(stderr, "alpha[62]: %c\talpha[61]: %c\n", alpha[62], alpha[61]);
 	// randomly choose one of possible char for each char in s
 	for (int i = 0; i < len; i++) {
-		s[i] = alpha[rand() % (sizeof(alpha)-1)];
+	  int index = rand() % (sizeof(alpha)-1);
+	  fprintf(stderr, "Generating random key\tIndex: %d\tKey: %c\n",index, alpha[index]);
+	  s[i] = alpha[index];
 	}
 
-	s[len] = 0; //terminate with nullbyte
+	s[len] = '\0'; //terminate with nullbyte
 }
 
 // need different implementation for insert, lenth, and lookup/delete
@@ -57,7 +61,7 @@ void* threadfunc(void* arg) {
 			// TODO: error handling
 		}
 		else
-			fprintf(stderr, "Target key: %c\n", target->key);
+		  fprintf(stderr, "Target key: %c\n", *(target->key));
 
 		int ret = SortedList_delete(target);
 		if (ret != 0) {
